@@ -70,9 +70,6 @@ struct BIT{
 
 ## 线段树
 
-update和query的时候一定要检查$[l,r]$是否正确
-加l>r return 0
-
 ```cpp
 struct SegmentTree {
     int lp(int x) {
@@ -226,7 +223,9 @@ struct SegmentTree{
 ```
 
 ## 线段树合并
+
 update和merge之后一定要记得接收新的根编号。
+
 ```cpp
 #include<bits/stdc++.h>
 using namespace std;
@@ -364,7 +363,6 @@ signed main(){
 }
 ```
 
-
 ## 并查集
 
 ```cpp
@@ -427,66 +425,6 @@ struct DSU{
 };
 ```
 
-## 可持久化线段树
-
-- 开40倍空间
-
-```cpp
-struct PresidentTree{
-    vector<int> node;
-    vector<int> lson,rson;
-    vector<int> head;
-    int n;
-    int cnt;
-    PresidentTree(int n,vector<int> &v):n(n){
-        node.resize(40*n);
-        lson.resize(40*n);
-        rson.resize(40*n);
-        cnt=0;
-        function<int(int,int)> buildtree=[&](int l,int r){
-            int now=++cnt;
-            if(l==r){
-                node[now]=v[l];
-                return now;
-            }
-            int mid=l+(r-l>>1);
-            lson[now]=buildtree(l,mid);
-            rson[now]=buildtree(mid+1,r);
-            return now;
-        };
-        head.push_back(buildtree(1,n));
-    }
-    void update(int nowid,int baseid,int x,int y){
-        function<int(int,int,int,int,int)> updatenode=[&](int base,int l,int r,int x,int y){
-            int now=++cnt;
-            if(l==r){
-                node[now]=y;
-                return now;
-            }
-            int mid=l+(r-l>>1);
-            if(x<=mid){
-                lson[now]=updatenode(lson[base],l,mid,x,y);
-                rson[now]=rson[base];
-            }else{
-                lson[now]=lson[base];
-                rson[now]=updatenode(rson[base],mid+1,r,x,y);
-            }
-            return now;
-        };
-        head.push_back(updatenode(head[baseid],1,n,x,y));
-    }
-    int query(int id,int x){
-        function<int(int,int,int,int)> querynode=[&](int base,int l,int r,int x){
-            if(l==r) return node[base];
-            int mid=l+(r-l>>1);
-            if(x<=mid) return querynode(lson[base],l,mid,x);
-            else return querynode(rson[base],mid+1,r,x);
-        };
-        return querynode(head[id],1,n,x);
-    }
-};
-```
-
 ## 主席树
 
 ```cpp
@@ -545,6 +483,7 @@ struct PresidentTree{
     }
     // 询问id版本值域[x,y]的权值
     int query(int id, int x, int y){
+    	if(x > y) return 0;
         auto querynode = [&](auto &&self, int base, int l, int r, int x, int y){
             if (x <= l && r <= y)
                 return node[base];
