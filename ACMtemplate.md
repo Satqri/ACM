@@ -4713,23 +4713,35 @@ using Poly = Polynomial<Z>;
 
 ### 快速沃尔什变换 FWT
 
-**适用范围**：（配合二进制状态压缩）
-
-- 按位运算卷积：$C[i]=\sum_{j\oplus k=i} A[j]B[k]$，其中 $\oplus$ 是二元位运算的一种
-- SOS DP / 子集-超集和：子集/超集 zeta & Möbius 变换，与 FWT_or / FWT_and 等价实现。
-- 布尔立方体上的运算：在 $\{0,1\}^m$ 上的线性变换、计数、期望、异或型 DP 等。
-- 与 NTT 不同：FWT 的“长度”是按位数 $n$ 的 $2^N$，服务于位掩码/集合运算；不是多项式的循环/线性卷积。
-
-**复杂度**：
-
-- 单次变换 $O(N\log N)$，其中 $N=2^n$
-- 卷积（正变换 A,B → 按位乘 → 逆变换）：$O(n\log n)$（三个变换 + $O(n)$ 点乘）
-- 实战规模：常见 $n\le 20$（$N\le 2^{20}$）较稳；$n=22$ 需注意常数与内存。
-
-**模板注意事项**：
-
-- 长度必须是 $N=2^n$，否则需要补 0 到最近的 $2^k$；
-- XOR 逆变换最后统一乘 $1/N$，逆元实现；OR / AND 不需要归一化。
+变换一次复杂度 $\mathcal{O}(n\log n)$，做一次点乘 $\mathcal{O}(n)$
+一个完整的 FWT 过程是先做一次正变换，再做一次点乘，再做一次逆变换，复杂度 $\mathcal{O}(n\log n)$
+#### OR
+正变换:
+$$
+\hat{a}[s] = \sum_{x\subseteq s} a[x]
+$$
+逆变换:
+$$
+a[s] = \sum_{x\subseteq s} (-1)^{|s|-|x|}\hat{a}[x]
+$$
+#### AND FWT
+正变换:
+$$
+\hat{a}[s] = \sum_{x\supseteq s} a[x]
+$$
+逆变换:
+$$
+a[s] = \sum_{x\supseteq s} (-1)^{|x|-|s|}\hat{a}[x]
+$$
+#### XOR
+正变换:
+$$
+\hat{a}[s] = \sum_{x=0}^{N-1} a[x]\cdot (-1)^{popcount(s\&x)}
+$$
+逆变换:
+$$
+a[x] = \frac{1}{N}\sum_{s=0}^{N-1} \hat{a}[s]\cdot (-1)^{popcount(s\&x)}
+$$
 
 ```c++
 template <int MOD>
