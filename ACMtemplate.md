@@ -4715,6 +4715,7 @@ using Poly = Polynomial<Z>;
 
 变换一次复杂度 $\mathcal{O}(n\log n)$，做一次点乘 $\mathcal{O}(n)$
 一个完整的 FWT 过程是先做一次正变换，再做一次点乘，再做一次逆变换，复杂度 $\mathcal{O}(n\log n)$
+你也可以应用如下的式子做单点的变换，时间复杂度 $\mathcal{O}(n)$
 #### OR
 正变换:
 $$
