@@ -9774,7 +9774,7 @@ using namespace __gnu_pbds;
 ## 拉链法哈希
 
 ```cpp
-cc_hash_table <int,int> f;
+gp_hash_table <int,int> f;
 ```
 
 ## 红黑树
