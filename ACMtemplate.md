@@ -4752,23 +4752,36 @@ using Poly = Polynomial<Z>;
 
 ### 快速沃尔什变换 FWT
 
-**适用范围**：（配合二进制状态压缩）
-
-- 按位运算卷积：$C[i]=\sum_{j\oplus k=i} A[j]B[k]$，其中 $\oplus$ 是二元位运算的一种
-- SOS DP / 子集-超集和：子集/超集 zeta & Möbius 变换，与 FWT_or / FWT_and 等价实现。
-- 布尔立方体上的运算：在 $\{0,1\}^m$ 上的线性变换、计数、期望、异或型 DP 等。
-- 与 NTT 不同：FWT 的“长度”是按位数 $n$ 的 $2^N$，服务于位掩码/集合运算；不是多项式的循环/线性卷积。
-
-**复杂度**：
-
-- 单次变换 $O(N\log N)$，其中 $N=2^n$
-- 卷积（正变换 A,B → 按位乘 → 逆变换）：$O(n\log n)$（三个变换 + $O(n)$ 点乘）
-- 实战规模：常见 $n\le 20$（$N\le 2^{20}$）较稳；$n=22$ 需注意常数与内存。
-
-**模板注意事项**：
-
-- 长度必须是 $N=2^n$，否则需要补 0 到最近的 $2^k$；
-- XOR 逆变换最后统一乘 $1/N$，逆元实现；OR / AND 不需要归一化。
+变换一次复杂度 $\mathcal{O}(n\log n)$，做一次点乘 $\mathcal{O}(n)$
+一个完整的 FWT 过程是先做一次正变换，再做一次点乘，再做一次逆变换，复杂度 $\mathcal{O}(n\log n)$
+你也可以应用如下的式子做单点的变换，时间复杂度 $\mathcal{O}(n)$
+#### OR
+正变换:
+$$
+\hat{a}[s] = \sum_{x\subseteq s} a[x]
+$$
+逆变换:
+$$
+a[s] = \sum_{x\subseteq s} (-1)^{|s|-|x|}\hat{a}[x]
+$$
+#### AND FWT
+正变换:
+$$
+\hat{a}[s] = \sum_{x\supseteq s} a[x]
+$$
+逆变换:
+$$
+a[s] = \sum_{x\supseteq s} (-1)^{|x|-|s|}\hat{a}[x]
+$$
+#### XOR
+正变换:
+$$
+\hat{a}[s] = \sum_{x=0}^{N-1} a[x]\cdot (-1)^{popcount(s\&x)}
+$$
+逆变换:
+$$
+a[x] = \frac{1}{N}\sum_{s=0}^{N-1} \hat{a}[s]\cdot (-1)^{popcount(s\&x)}
+$$
 
 ```c++
 template <int MOD>
@@ -4886,9 +4899,9 @@ int main() {
 
 ## 求n!质因数p的个数
 
-1-n每个数都可以贡献质因数p
+$[1,n]$ 每个数都可以贡献质因数 $p$
 
-p的倍数贡献一个，p^2的倍数继续额外贡献一个
+$p$ 的倍数贡献一个，$p^2$ 的倍数继续额外贡献一个
 
 $cnt=\left\lfloor \frac{n}{p} \right\rfloor+\left\lfloor \frac{n}{p^2} \right\rfloor+...+\left\lfloor \frac{n}{p^k} \right\rfloor$
 
@@ -4898,7 +4911,7 @@ $gcd(n,p)=1$
 
 $x^2=n(mod~p)$
 
-若存在x，则n为模p的二次剩余（p是奇素数），否则就是二次非剩余
+若存在 $x$，则 $n$ 为模 $p$ 的二次剩余（$p$ 是奇素数），否则就是二次非剩余
 
 ### Euler判定
 
@@ -5077,8 +5090,8 @@ f：原函数（积性函数）
 
 fpi：新函数（完全积性函数），质数处与f取值相同
 
-1. 先求出$g[n][i]$，即$x\in[2,n]  $且（x为质数或x的最小质因数>$prime_i$)时，所有fpi(x)的和
-2. $s[n][i]$表示，$x\in[2,n]$且最小质因数>$prime_i$时，所有f(x)的和
+1. 先求出 $g[n][i]$，即 $x\in[2,n]$ 且 ( $x$ 为质数或 $x$ 的最小质因数 $>prime_i$ ) 时，所有fpi(x)的和
+2. $s[n][i]$ 表示，$x\in[2,n]$ 且最小质因数 $>prime_i$ 时，所有 $f(x)$ 的和
 
 $g(n, j) = g(n, j-1) - fpi(p_j) \left( g\left(\frac{n}{p_j}, j-1\right) - g(p_{j-1}, j-1) \right)$
 
@@ -5649,7 +5662,7 @@ signed main(){
 
 ### Zobrist Hash
 
-用于棋盘状态压缩，每个位置的每个棋子状态（例如（1,1）位置为黑棋）使用mt19937_64赋予一个随机值，最后整个棋盘的状态等于所有棋子的异或和
+用于棋盘状态压缩，每个位置的每个棋子状态（例如（1,1）位置为黑棋）使用 `mt19937_64` 赋予一个随机值，最后整个棋盘的状态等于所有棋子的异或和
 ## 狄利克雷卷积
 定义
 $$
@@ -5846,17 +5859,17 @@ struct Flow{
 
 ### 最小割
 
-网络G=(V,E)的一个割{S,T}，S和T是点的一个划分，$s\in S,t\in T$，{S,T}的容量=${\textstyle \sum_{u\in S} \sum_{v\in T}c(u,v)}$
+网络 $G=(V,E)$ 的一个割 ${S,T}$，$S$ 和 $T$ 是点的一个划分，$s\in S,t\in T$，${S,T}$ 的容量= ${\textstyle \sum_{u\in S} \sum_{v\in T}c(u,v)}$
 
 最小割要找到一个割，使得容量尽可能小
 
 根据最大流最小割定理，最大流=最小割，直接套用最大流即可
 
-dep[x]!=-1，表示属于割边，x与s联通
+$dep[x]!=-1$，表示属于割边，$x$ 与 $s$ 联通
 
 ### 最小费用最大流
 
-在网络上对每条边(u,v)给定一个权值w(u,v)，称为费用，含义是单位流量通过(u,v)所花费的代价，对于G所有可能的最大流中总费用最小的为最小费用最大流，SSP算法，$O(nm+n^2f)$，其中f为网络最大流
+在网络上对每条边 $(u,v)$ 给定一个权值 $w(u,v)$，称为费用，含义是单位流量通过 $(u,v)$ 所花费的代价，对于 $G$ 所有可能的最大流中总费用最小的为最小费用最大流，SSP算法，$O(nm+n^2f)$，其中 $f$ 为网络最大流
 
 ```c++
 struct MinCostFlow{
@@ -9829,20 +9842,20 @@ __gnu_pbds::tree<std::pair<int, int>, __gnu_pbds::null_type,
     trr;
 ```
 
-insert(x)：向树中插入一个元素 x，返回 std::pair<point_iterator, bool>。
-erase(x)：从树中删除一个元素/迭代器 x，返回一个 bool 表明是否删除成功。
-order_of_key(x)：返回 x 以 Cmp_Fn 比较的排名，**0 开始**。
-find_by_order(x)：返回 Cmp_Fn 比较的排名所对应元素的迭代器。
-lower_bound(x)：以 Cmp_Fn 比较做 lower_bound，返回迭代器。
-upper_bound(x)：以 Cmp_Fn 比较做 upper_bound，返回迭代器。
-join(x)：将 x 树并入当前树，前提是两棵树的类型一样，x 树被删除。
-split(x, b)：以 Cmp_Fn 比较，小于等于 x 的属于当前树，其余的属于 b 树。
-empty()：返回是否为空。
-size()：返回大小。
-
-元素不可重，可以使用 pair<int,int>加入时间戳来使元素可重
-
 ```cpp
+// insert(x)：向树中插入一个元素 x，返回 std::pair<point_iterator, bool>。
+// erase(x)：从树中删除一个元素/迭代器 x，返回一个 bool 表明是否删除成功。
+// order_of_key(x)：返回 x 以 Cmp_Fn 比较的排名，**0 开始**。
+// find_by_order(x)：返回 Cmp_Fn 比较的排名所对应元素的迭代器。
+// lower_bound(x)：以 Cmp_Fn 比较做 lower_bound，返回迭代器。
+// upper_bound(x)：以 Cmp_Fn 比较做 upper_bound，返回迭代器。
+// join(x)：将 x 树并入当前树，前提是两棵树的类型一样，x 树被删除。
+// split(x, b)：以 Cmp_Fn 比较，小于等于 x 的属于当前树，其余的属于 b 树。
+// empty()：返回是否为空。
+// size()：返回大小。
+
+// 元素不可重，可以使用 pair<int,int>加入时间戳来使元素可重
+
 //插入
 tr.insert({x,++cnt});
 //删除
@@ -10151,6 +10164,7 @@ Shell
 
 ```sh
 #!/bin/bash
+clear
 mkdir -p data
 trap "rm -f m a r" EXIT
 g++ maker.cpp -o m; g++ main.cpp -o a; g++ right.cpp -o r
@@ -10172,6 +10186,7 @@ done
 PowerShell
 
 ```powershell
+clear
 g++ maker.cpp -o m.exe; g++ main.cpp -o a.exe; g++ right.cpp -o r.exe
 if (! (Test-Path data)) { mkdir data }
 try {
