@@ -426,7 +426,43 @@ struct DSU{
 ```
 
 ```cpp
-
+//可撤销并查集，启发式合并，find是logn的
+struct DSU{
+    vector<int> fa;
+    vector<int> sz;
+    int n;
+    stack<array<int,4>> st;
+    DSU(int n){
+        this->n=n;
+        fa=vector<int>(n+1);
+        sz=vector<int>(n+1,1);
+        for(int i=0;i<=n;i++) fa[i]=i;
+    }
+    int find(int x){
+        if(fa[x]==x) return x;
+        else return find(fa[x]);
+    }
+    bool merge(int x,int y){
+        int fax=find(x);
+        int fay=find(y);
+        if(fax==fay){
+            st.push({-1,-1,-1,-1});
+            return 0;
+        }
+        if(sz[fax]>sz[fay]) swap(fax,fay);
+        st.push({fax,fa[fax],fay,sz[fax]});
+        fa[fax]=fay;
+        sz[fay]+=sz[fax];
+        return 1;
+    }
+    void pop(){
+        auto [a,b,c,d]=st.top();
+        st.pop();
+        if(a==-1) return;
+        fa[a]=b;
+        sz[c]-=d;
+    }
+};
 ```
 ## 主席树
 
