@@ -9877,7 +9877,136 @@ auto it=tr.upper_bound({x,INF});
 if(it==tr.end()) continue;
 it->first;
 ```
+## 笛卡尔树
 
+son first左儿子second右儿子
+p符合堆的性质
+下标符合二叉搜索树的性质
+
+```cpp
+int n;
+cin>>n;
+vector<int> p(n+1);
+vector<pair<int,int>> son(n+1);
+for(int i=1;i<=n;i++) cin>>p[i];
+stack<int> st;
+int rt=-1;
+for(int i=1;i<=n;i++){
+	if(st.empty()) rt=i;
+	else{
+		int pre=-1;
+		while(!st.empty()&&p[st.top()]>p[i]){
+			pre=st.top();
+			st.pop();
+		}
+		if(st.empty()){
+			rt=i;
+			son[rt].first=pre;
+		}else{
+			son[i].first=son[st.top()].second;
+			son[st.top()].second=i;
+		}
+	}
+	st.push(i);
+}
+```
+
+## wqs二分
+
+一般用于求恰好选$k$个物品的答案
+
+设$g[i]$表示恰好选$i$个物品的答案，需要满足$(i,dp[i])$是个凸包。
+
+假设$g[i]$是个下凸函数：
+
+用直线$y=kx+b$去切这个凸包，切于点$x_0$，$x_0$越大，$k$越大，b越小。可以得出此时的截距$b=g(x_0)-kx_0$。算出来切于答案点的$k$和b。
+
+给你一个无向带权连通图，每条边是黑色或白色。让你求一棵最小权的恰好有$need$条白色边的生成树。
+
+```cpp
+#include<bits/stdc++.h>
+using namespace std;
+#define int long long
+const int INF=1e18;
+struct DSU{
+    vector<int> fa;
+    vector<int> rank;
+    int n;
+    DSU(int n){
+        this->n=n;
+        fa=vector<int>(n+1);
+        rank=vector<int>(n+1,0);
+        for(int i=0;i<=n;i++) fa[i]=i;
+    }
+    int find(int x){
+        return fa[x]==x?x:fa[x]=find(fa[x]);
+    }
+    bool merge(int x,int y){
+        int fax=find(x);
+        int fay=find(y);
+        if(fax==fay) return 0;
+        if(rank[fax]<rank[fay]) fa[fax]=fay;
+        else{
+            fa[fay]=fax;
+            if(rank[fax]==rank[fay]) rank[fax]++;
+        }
+        return 1;
+    }
+};
+void solve(){
+    int n,m,k;
+    cin>>n>>m>>k;
+    vector<array<int,4>> v(m);
+    for(int i=0;i<m;i++){
+        cin>>v[i][0]>>v[i][1]>>v[i][2]>>v[i][3];
+    }
+    int l=-105,r=105,ans1,ans2;
+    auto check=[&](int k)->pair<int,int>{
+        DSU dsu(n);
+        for(int i=0;i<m;i++){
+            if(v[i][3]==0){
+                v[i][2]-=k;
+            }
+        }
+        sort(v.begin(),v.end(),[&](const auto &a,const auto &b){
+            if(a[2]!=b[2]) return a[2]<b[2];
+            return a[3]<b[3];
+        });
+        pair<int,int> ans={INF,INF};
+        int sum=0,cnt=0;
+        for(int i=0;i<m;i++){
+            if(dsu.merge(v[i][0],v[i][1])){
+                sum+=v[i][2];
+                if(v[i][3]==0) cnt++;
+            }
+        }
+        ans=min(ans,{sum,-cnt});
+        for(int i=0;i<m;i++){
+            if(v[i][3]==0){
+                v[i][2]+=k;
+            }
+        }
+        return ans;
+    };
+    while(l<=r){
+        int mid=(l+r)/2;
+        auto [a,b]=check(mid);
+        if(-b>=k){
+            ans1=a;
+            ans2=mid;
+            r=mid-1;
+        }else l=mid+1;
+    }
+    cout<<ans1+ans2*k<<"\n";
+}
+signed main(){
+    cin.tie(nullptr)->sync_with_stdio(0);
+    int t=1;
+    //cin>>t;
+    while(t--) solve();
+    return 0;
+}
+```
 ## 快读快写
 
 ```cpp
