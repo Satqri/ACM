@@ -2088,9 +2088,9 @@ vector<int> z_function(string s){
 
 ## 前缀函数
 
-π[i]表示子串[0,i]最长的相等的真前缀与真后缀的长度
+$π[i]$ 表示子串 $[0,i]$ 最长的相等的真前缀与真后缀的长度
 
-其中π[0]=0
+其中 $π[0]=0$
 
 ```cpp
 vector<int> prefix_function(string s){
@@ -2168,17 +2168,17 @@ vector<int> Stringhash::qpow[2];
 
 ## 字符串的周期
 
-如果s长度为r的前缀和长度为r的后缀相等，那么s长度为r的前缀是s的一个border，n-r是s的一个周期。
+如果 $s$ 长度为 $r$ 的前缀和长度为 $r$ 的后缀相等，那么 $s$ 长度为 $r$ 的前缀是 $s$ 的一个border，$n-r$ 是 $s$ 的一个周期。
 
-pi[n-1],pi[pi[n-1]]……为所有border的长度
+$pi[n-1],pi[pi[n-1]]\dots$ 为所有border的长度
 
-最小周期为n-pi[n-1]
+最小周期为 $n-pi[n-1]$
 
 ## 最小表示法
 
-s[i...n]+s[1...i-1]=T
+$s[i...n]+s[1...i-1]=T$
 
-s的最小表示法就是与S循环同构的字典序最小的字符串
+$s$ 的最小表示法就是与 $s$ 循环同构的字典序最小的字符串
 
 ```cpp
 int k=0,i=0,j=1;
@@ -2200,7 +2200,7 @@ i=min(i,j);
 
 ## 后缀数组（SA）
 
-sa[i]表示所有后缀排序后第i小的后缀的编号，rk[i]表示后缀i的排名，height[i]表示第i名后缀与前一名的后缀的最长公共前缀
+$sa[i]$ 表示所有后缀排序后第i小的后缀的编号，$rk[i]$ 表示后缀i的排名，$height[i]$ 表示第 $i$ 名后缀与前一名的后缀的最长公共前缀
 
 $height[rk[i]] \ge height[rk[i - 1]] - 1$
 
@@ -5866,7 +5866,7 @@ struct Flow{
 根据最大流最小割定理，最大流=最小割，直接套用最大流即可
 
 $dep[x]!=-1$，表示属于割边，$x$ 与 $s$ 联通
-
+  
 ### 最小费用最大流
 
 在网络上对每条边 $(u,v)$ 给定一个权值 $w(u,v)$，称为费用，含义是单位流量通过 $(u,v)$ 所花费的代价，对于 $G$ 所有可能的最大流中总费用最小的为最小费用最大流，SSP算法，$O(nm+n^2f)$，其中 $f$ 为网络最大流
@@ -9973,7 +9973,7 @@ void date(int n, int &y, int &m, int &d) {
     y = (4 * n - 489) / 1461, n -= y * 1461 / 4;
     m = (5 * n - 1) / 153, d = n - m * 153 / 5;
     if (--m > 12)
-        m -= 12, ++y;
+        m -= 12, ++y;  
 }
 ```
 
@@ -10208,4 +10208,25 @@ try {
 } finally {
     rm m.exe, a.exe, r.exe -ErrorAction SilentlyContinue
 }
+```
+
+## 随机数哈希
+
+```cpp
+struct Hash {
+    static inline const uint64_t R = chrono::steady_clock::now().time_since_epoch().count();
+    static uint64_t mix(uint64_t x) {
+        x += R;
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        return x;
+    }
+    size_t operator()(long long x) const {
+        return mix(x);
+    }
+    size_t operator()(const pair<long long, long long> &p) const {
+        return mix((uint64_t)p.first ^ ((uint64_t)p.second << 1));
+    }
+};
 ```
