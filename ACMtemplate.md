@@ -2868,8 +2868,8 @@ struct matrix{
     matrix operator*(const matrix &e) const{
         matrix ans(n,e.m);
         for(int i=0;i<n;i++){
-            for(int j=0;j<e.m;j++){
-                for(int k=0;k<m;k++){
+	        for(int k=0;k<m;k++){
+	            for(int j=0;j<e.m;j++){
                     ans.v[i][j]+=v[i][k]*e.v[k][j];
                 }
             }
