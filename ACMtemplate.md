@@ -2868,8 +2868,8 @@ struct matrix{
     matrix operator*(const matrix &e) const{
         matrix ans(n,e.m);
         for(int i=0;i<n;i++){
-            for(int j=0;j<e.m;j++){
-                for(int k=0;k<m;k++){
+	        for(int k=0;k<m;k++){
+	            for(int j=0;j<e.m;j++){
                     ans.v[i][j]+=v[i][k]*e.v[k][j];
                 }
             }
@@ -3941,8 +3941,6 @@ struct Linear_basis
             if (!(x >> i))
                 continue;
             if (!p[i]){
-                if (!x)
-                    flag = 1;
                 p[i] = x;
                 real[i] = _;
                 mask[i] = msk ^ (1ll << i);
@@ -3951,6 +3949,8 @@ struct Linear_basis
             x ^= p[i];
             msk ^= mask[i];
         }
+        if (!x)
+            flag = 1;
     }
     // 查询最大值/某个值能变成的最大值
     int querymx(int x = 0){
@@ -10256,13 +10256,12 @@ Shell
 
 ```sh
 #!/bin/bash
-clear
-g++ -O2 main.cpp -o a.out
+g++-14 -O2 main.cpp -o a.out
 if [ $? -ne 0 ]; then exit; fi
-s=$(date +%s%3N)
+s=$(python3 -c "import time; print(int(time.time()*1000))")
 ./a.out < in.txt > out.txt 2> err.txt
 res=$?
-e=$(date +%s%3N)
+e=$(python3 -c "import time; print(int(time.time()*1000))")
 cat out.txt
 echo -e "\n--- err ---\n"
 cat err.txt
@@ -10271,7 +10270,6 @@ if [ $res -ne 0 ]; then
     echo "RE!!!!!!!"
 fi
 rm a.out out.txt err.txt
-# 若不需要按下回车后退出可以不打最后一行
 read -n 1 -s
 ```
 
