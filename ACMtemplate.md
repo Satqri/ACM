@@ -3941,8 +3941,6 @@ struct Linear_basis
             if (!(x >> i))
                 continue;
             if (!p[i]){
-                if (!x)
-                    flag = 1;
                 p[i] = x;
                 real[i] = _;
                 mask[i] = msk ^ (1ll << i);
@@ -3951,6 +3949,8 @@ struct Linear_basis
             x ^= p[i];
             msk ^= mask[i];
         }
+        if (!x)
+            flag = 1;
     }
     // 查询最大值/某个值能变成的最大值
     int querymx(int x = 0){
