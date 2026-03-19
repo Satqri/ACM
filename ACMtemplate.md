@@ -4017,13 +4017,15 @@ struct Linear_basis
 
 ## 扩展欧拉定理
 
-$a^{b}\equiv\left\{
+$$
+a^{b}\equiv\left\{
 \begin{array}{ll}
 a^{b\text{ mod}\varphi(m)}, & \text{if } \gcd(a, m)=1, \\
 a^{b}, & \text{if } \gcd(a, m) \neq 1 \text{ and } b < \varphi(m), \\
 a^{(b\text{ mod}\varphi(m))+\varphi(m)}, & \text{if } \gcd(a, m) \neq 1 \text{ and } b \geq \varphi(m). \\
 \end{array}
-\right.$
+\right.
+$$
 
 ## 扩展欧几里德
 
