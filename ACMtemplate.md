@@ -3956,7 +3956,8 @@ struct Linear_basis
     int querymx(int x = 0){
         int ret = x;
         for (int i = n - 1; ~i; i--){
-            ret = max(ret, ret ^ p[i]);
+        	if (!(ret>>i))
+            	ret ^= p[i]);
         }
         return ret;
     }
