@@ -3924,8 +3924,7 @@ ll mul(ll a, ll b, ll p) {
 解决异或问题。原序列里的每一个数都可以由线性基里面的一些数异或得到，线性基里面任意一些数异或起来不等于0，线性基里面的数的个数唯一，且数的个数是最小的。
 
 ```cpp
-struct Linear_basis
-{
+struct Linear_basis {
     vector<int> p;
     vector<int> d;
     vector<int> mask; // 由哪些真实值异或而来
@@ -3934,13 +3933,13 @@ struct Linear_basis
     bool flag = 0; // 有无0
     Linear_basis(int n = 64) : n(n), p(n), mask(n), real(n) {}
     // 插入一个数
-    void add(int x){
+    void add(int x) {
         int _ = x;
         int msk = 0;
-        for (int i = n - 1; ~i; i--){
+        for (int i = n - 1; ~i; i--) {
             if (!(x >> i))
                 continue;
-            if (!p[i]){
+            if (!p[i]) {
                 p[i] = x;
                 real[i] = _;
                 mask[i] = msk ^ (1ll << i);
@@ -3953,29 +3952,29 @@ struct Linear_basis
             flag = 1;
     }
     // 查询最大值/某个值能变成的最大值
-    int querymx(int x = 0){
+    int querymx(int x = 0) {
         int ret = x;
-        for (int i = n - 1; ~i; i--){
-        	if (!(ret>>i))
-            	ret ^= p[i]);
+        for (int i = n - 1; ~i; i--) {
+            if (!(ret >> i & 1))
+                ret ^= p[i];
         }
         return ret;
     }
-    //查询最小值
-    int querymn(){
+    // 查询最小值
+    int querymn() {
         if (flag)
             return 0;
-        for (int i = 0; i < n; i++){
+        for (int i = 0; i < n; i++) {
             if (!p[i])
                 continue;
             return p[i];
         }
     }
     // 询问某值，若能则返回该值如何被异或出来(msk里的每个1对应相应位置上的real)
-    int query(int x){
+    int query(int x) {
         int msk = 0;
-        for (int i = n - 1; ~i; i--){
-            if ((x >> i) & 1){
+        for (int i = n - 1; ~i; i--) {
+            if ((x >> i) & 1) {
                 msk ^= mask[i];
                 x ^= p[i];
             }
@@ -3986,28 +3985,28 @@ struct Linear_basis
             return -1;
     }
     // 重构一个各个位之间互不影响的d数组
-    void rebuild(){
-        for (int i = n - 1; ~i; i--){
-            for (int j = i - 1; ~j; j--){
+    void rebuild() {
+        for (int i = n - 1; ~i; i--) {
+            for (int j = i - 1; ~j; j--) {
                 if (p[i] >> j & 1)
                     p[i] ^= p[j];
             }
         }
-        for (int i = 0; i < n; i++){
-            if (p[i]){
+        for (int i = 0; i < n; i++) {
+            if (p[i]) {
                 d.push_back(p[i]);
             }
         }
     }
     // 查询第k小值(要先rebuild)
-    int querykth(int k){
-        if (flag){
+    int querykth(int k) {
+        if (flag) {
             if (k == 1)
                 return 0;
             k--;
         }
         int ans = 0;
-        for (int i = d.size() - 1; i >= 0; i--){
+        for (int i = d.size() - 1; i >= 0; i--) {
             if (k >> i & 1)
                 ans ^= d[i];
         }
