@@ -389,8 +389,8 @@ struct DSU{
         int fax=find(x);
         int fay=find(y);
         if(fax==fay) return 0;
-        fa[x]=y;
-        sz[x]=1;
+        fa[fax]=fay;
+        sz[fax]=1;
         return 1;
     }
 };
@@ -517,7 +517,7 @@ struct PresidentTree{
         head.push_back(updatenode(updatenode, head[baseid], L, R, x, y));
     }
     // 加一个版本
-    void push_back(int x, int y){
+    void push_back(int x, int y) {
         update((int)head.size() - 1, x, y);
     }
     // 询问id版本值域[x,y]的权值
