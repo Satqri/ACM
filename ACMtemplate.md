@@ -654,61 +654,64 @@ struct ST {
 ## 权值线段树
 
 ```cpp
-struct SegmentTree{
-    struct edge{
-        int sum,lson,rson;
+struct SegmentTree {
+    struct edge {
+        int sum, lson, rson;
     };
-    int l,r;
+    int l, r;
     int cnt;
     vector<edge> node;
-    SegmentTree(int l,int r):l(l),r(r){
-        cnt=1;
-        node.push_back({0,0,0});
-        node.push_back({0,0,0});
+    SegmentTree(int l, int r) : l(l), r(r) {
+        cnt = 1;
+        node.push_back({0, 0, 0});
+        node.push_back({0, 0, 0});
     }
-    void pushup(int id,int l,int r){
-        node[id].sum=0;
-        if(node[id].lson) node[id].sum+=node[node[id].lson].sum;
-        if(node[id].rson) node[id].sum+=node[node[id].rson].sum;
+    void pushup(int id, int l, int r) {
+        node[id].sum = 0;
+        if (node[id].lson)
+            node[id].sum += node[node[id].lson].sum;
+        if (node[id].rson)
+            node[id].sum += node[node[id].rson].sum;
     }
-    void update(int x,int delta){
-        function<void(int,int,int,int,int)> upd=[&](int id,int l,int r,int x,int delta){
-            if(l==r){
-                node[id].sum+=delta;
+    void update(int x, int delta) {
+        auto upd = [&](auto &self, int id, int l, int r, int x, int delta) {
+            if (l == r) {
+                node[id].sum += delta;
                 return;
             }
-            int mid=l+(r-l>>1);
-            if(x<=mid){
-                if(!node[id].lson){
-                    node[id].lson=++cnt;
-                    node.push_back({0,0,0});
+            int mid = l + (r - l >> 1);
+            if (x <= mid) {
+                if (!node[id].lson) {
+                    node[id].lson = ++cnt;
+                    node.push_back({0, 0, 0});
                 }
-                upd(node[id].lson,l,mid,x,delta);
-            }else{
-                if(!node[id].rson){
-                    node[id].rson=++cnt;
-                    node.push_back({0,0,0});
+                self(self, node[id].lson, l, mid, x, delta);
+            } else {
+                if (!node[id].rson) {
+                    node[id].rson = ++cnt;
+                    node.push_back({0, 0, 0});
                 }
-                upd(node[id].rson,mid+1,r,x,delta);
+                self(self, node[id].rson, mid + 1, r, x, delta);
             }
-            pushup(id,l,r);
+            pushup(id, l, r);
         };
-        upd(1,l,r,x,delta);
+        upd(upd, 1, l, r, x, delta);
     }
-    int query(int x,int y){
-        function<int(int,int,int,int,int)> que=[&](int id,int l,int r,int x,int y){
-            if(x<=l&&r<=y) return node[id].sum;
-            int ans=0;
-            int mid=l+(r-l>>1);
-            if(x<=mid&&node[id].lson){
-                ans+=que(node[id].lson,l,mid,x,y);
+    int query(int x, int y) {
+        auto que = [&](auto &&self, int id, int l, int r, int x, int y) {
+            if (x <= l && r <= y)
+                return node[id].sum;
+            int ans = 0;
+            int mid = l + (r - l >> 1);
+            if (x <= mid && node[id].lson) {
+                ans += self(self, node[id].lson, l, mid, x, y);
             }
-            if(y>mid&&node[id].rson){
-                ans+=que(node[id].rson,mid+1,r,x,y);
+            if (y > mid && node[id].rson) {
+                ans += self(self, node[id].rson, mid + 1, r, x, y);
             }
             return ans;
         };
-        return que(1,l,r,x,y);
+        return que(que, 1, l, r, x, y);
     }
 };
 ```
