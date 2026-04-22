@@ -8190,6 +8190,7 @@ signed main(){
 ```c++
 struct ST {
     vector<vector<pair<int, int>>> dp;
+    ST() {}
     ST(int n, vector<pair<int, int>> &v) {
         dp.resize(20);
         for (int i = 0; i < 20; i++) {
@@ -8212,9 +8213,25 @@ struct ST {
 struct LCA {
     int n;
     vector<pair<int, int>> lcaqu;
-    vector<int> lcadfn, dep;
+    vector<int> lcadfn, dep, dis;
     ST st;
-    LCA(int _n, vector<vector<int>> _g) : n(_n), lcaqu(1), lcadfn(n + 1), dep(n + 1) {
+    LCA(int _n, vector<vector<pair<int, int>>> _g) : n(_n), lcaqu(1), lcadfn(n + 1), dep(n + 1), dis(n + 1) {
+        auto lcadfs = [&](auto &&self, int x, int fa) -> void {
+            lcadfn[x] = lcaqu.size();
+            dep[x] = dep[fa] + 1;
+            lcaqu.emplace_back(dep[x], x);
+            for (auto &[to, w] : _g[x]) {
+                if (to == fa)
+                    continue;
+                dis[to] = dis[x] + w;
+                self(self, to, x);
+                lcaqu.emplace_back(dep[x], x);
+            }
+        };
+        lcadfs(lcadfs, 1, 0);
+        st = ST(lcaqu.size() - 1, lcaqu);
+    }
+    LCA(int _n, vector<vector<int>> _g) : n(_n), lcaqu(1), lcadfn(n + 1), dep(n + 1), dis(n + 1) {
         auto lcadfs = [&](auto &&self, int x, int fa) -> void {
             lcadfn[x] = lcaqu.size();
             dep[x] = dep[fa] + 1;
@@ -8222,6 +8239,7 @@ struct LCA {
             for (auto &to : _g[x]) {
                 if (to == fa)
                     continue;
+                dis[to] = dis[x] + 1;
                 self(self, to, x);
                 lcaqu.emplace_back(dep[x], x);
             }
@@ -8234,6 +8252,11 @@ struct LCA {
         if (l > r)
             swap(l, r);
         return st.query(l, r);
+    }
+    // 求边权dis，点权不要用。
+    int getdis(int x, int y) {
+        int lca = getlca(x, y);
+        return dis[x] + dis[y] - 2 * dis[lca];
     }
 };
 ```
