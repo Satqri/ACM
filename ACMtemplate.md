@@ -7899,6 +7899,8 @@ signed main(){
 
 建虚树的时候注意别用原树的边来建了。
 
+注意根节点是 CD.root 而不是随便一个节点
+
 ```c++
 struct CD {
     int n;
@@ -10257,4 +10259,29 @@ struct Hash {
         return mix((uint64_t)p.first ^ ((uint64_t)p.second << 1));
     }
 };
+```
+
+## 快速模
+
+```cpp
+struct Barrett {
+    int d;
+    __uint128_t m;
+    void init(int _d) {
+        d = _d, m = (((__uint128_t)(1) << 64) / d);
+    }
+} mod;
+int operator%(int a, Barrett mod) {
+    int b = abs(a);
+    int w = (mod.m * b) >> 64;
+    w = b - w * mod.d;
+    if (w >= mod.d)
+        w -= mod.d;
+    if (a < 0) {
+        if (w == 0)
+            return 0;
+        w = mod.d - w;
+    }
+    return w;
+}
 ```
