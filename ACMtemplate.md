@@ -2888,7 +2888,7 @@ struct matrix{
                 int line=i;
                 double maxn=v[i][column];
                 for(int j=i+1;j<n;j++){
-                    if(fabs(v[j][column])>maxn){
+                    if(fabs(v[j][column])>abs(maxn)){
                         maxn=v[j][column];
                         line=j;
                     }
@@ -9473,7 +9473,63 @@ double triangleArea(const Point &a, const Point &b, const Point &c){
 }
 ```
 
+## 直线凸壳
 
+```cpp
+struct Line {
+    int k, b;
+};
+// 计算上凸壳,返回直线表达式和断点
+// 断点大小为直线个数-1,brk[0]是第一个断点
+pair<vector<Line>, vector<double>> upper_hull(vector<Line> lines) {
+    sort(lines.begin(), lines.end(), [](const Line &a, const Line &b) {
+        if (a.k != b.k)
+            return a.k < b.k;
+        return a.b > b.b;
+    });
+    vector<Line> uniq;
+    for (int i = 0; i < lines.size(); ++i) {
+        if (i && lines[i].k == lines[i - 1].k)
+            continue;
+        uniq.push_back(lines[i]);
+    }
+    vector<Line> stk;
+    vector<double> breaks;
+    for (Line& l : uniq) {
+        while (stk.size() >= 2) {
+            Line l1 = stk[stk.size() - 2];
+            Line l2 = stk.back();
+            __int128 left = (__int128)(l2.b - l.b) * (l2.k - l1.k);
+            __int128 right = (__int128)(l1.b - l2.b) * (l.k - l2.k);
+            if (left <= right) {
+                stk.pop_back();
+            } else
+                break;
+        }
+        stk.push_back(l);
+    }
+    for (int i = 0; i + 1 < stk.size(); ++i) {
+        int k1 = stk[i].k, b1 = stk[i].b;
+        int k2 = stk[i + 1].k, b2 = stk[i + 1].b;
+        double t = (double)(b1 - b2) / (k2 - k1);
+        breaks.push_back(t);
+    }
+    return {stk, breaks};
+}
+// 下凸壳
+pair<vector<Line>, vector<double>> lower_hull(vector<Line> lines) {
+    for (Line &l : lines) {
+        l.k = -l.k;
+        l.b = -l.b;
+    }
+    auto [stk, brk] = upper_hull(lines);
+    for (Line &l : stk) {
+        l.k = -l.k;
+        l.b = -l.b;
+    }
+    return {stk, brk};
+}
+```
 
 ## 三维几何
 
