@@ -6279,7 +6279,7 @@ flag[x]=1，表示fa[x]->x是桥
 
 ### 边双连通分量
 
-先求出桥，把割点删去，剩下的极大连通子图就是边双连通分量，不能用常规方法存图
+先求出桥，把桥删去，剩下的极大连通子图就是边双连通分量，不能用常规方法存图
 
 ```cpp
 #include<bits/stdc++.h>
@@ -6598,6 +6598,7 @@ signed main(){
 ```
 
 ```cpp
+//自环会死！！！！！
 #include<bits/stdc++.h>
 using namespace std;
 void solve(){
@@ -6608,6 +6609,7 @@ void solve(){
 	for(int i=1;i<=m;i++){
 		int x,y;
 		cin>>x>>y;
+		if(x==y) continue;
 		e[i]={x,y};
 		v[x].emplace_back(y,i);
 		v[y].emplace_back(x,i);
