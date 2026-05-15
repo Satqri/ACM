@@ -3761,15 +3761,17 @@ $(2n-1)!!=1\times 3\times 5\times \dots \times (2n-1)=\frac{(2n)!}{(2n)!!}=\frac
 ## 二项式反演
 
 $$
-g_n=\sum_{i=0}^nC_n^if_i
-\\
-f_n=\sum_{i=0}^nC_n^i(-1)^{n-i}g_i
+\begin{aligned}
+g_n &= \sum_{i=0}^n C_n^i f_i \\
+f_n &= \sum_{i=0}^n C_n^i (-1)^{n-i} g_i
+\end{aligned}
 $$
 
 $$
-g_k=\sum_{i=k}^nC_i^kf_i
-\\
-f_k=\sum_{i=k}^nC_i^k(-1)^{i-k}g_i
+\begin{aligned}
+g_k &= \sum_{i=k}^n C_i^k f_i \\
+f_k &= \sum_{i=k}^n C_i^k (-1)^{i-k} g_i
+\end{aligned}
 $$
 
 
@@ -9529,6 +9531,73 @@ pair<vector<Line>, vector<double>> lower_hull(vector<Line> lines) {
     }
     return {stk, brk};
 }
+```
+
+## 动态凸壳
+
+```cpp
+const double eps = 1e-8;
+struct Point {
+    double x, y;
+    Point(double x, double y) : x(x), y(y) {}
+    Point operator-(const Point &a) const { return {x - a.x, y - a.y}; }
+    bool operator<(const Point &a) const {
+        if (x != a.x)
+            return x < a.x;
+        return y < a.y;
+    }
+};
+double cross(const Point a, const Point b) {
+    return a.x * b.y - b.x * a.y;
+}
+struct Upperhull {
+    set<Point> hull;
+    set<Point>::iterator pre(set<Point>::iterator it) {
+        return it == hull.begin() ? hull.end() : --it;
+    }
+    set<Point>::iterator next(set<Point>::iterator it) {
+        ++it;
+        return it == hull.end() ? hull.end() : it;
+    }
+    bool check(Point p) {
+        auto it = hull.lower_bound(p);
+        if (it == hull.end())
+            return false;
+        if (it == hull.begin()) {
+            if (abs(it->x - p.x) < eps)
+                return it->y >= p.y;
+            return false;
+        }
+        auto prev_it = pre(it);
+        Point a = *prev_it - p, b = *it - p;
+        return cross(a, b) <= eps;
+    }
+    bool erase(set<Point>::iterator it) {
+        if (it == hull.end() || it == hull.begin())
+            return false;
+        auto prev_it = pre(it), next_it = next(it);
+        if (next_it == hull.end())
+            return false;
+        Point a = *it - *prev_it, b = *next_it - *it;
+        if (cross(a, b) >= eps) {
+            hull.erase(it);
+            return true;
+        }
+        return false;
+    }
+    void insert(Point p) {
+        if (check(p))
+            return;
+        auto it = hull.insert(p).first;
+        auto prev_it = pre(it), next_it = next(it);
+        for (auto p = pre(it); p != hull.end() && p != hull.begin(); p = pre(it))
+            if (!erase(p))
+                break;
+        for (auto a = next(it); a != hull.end(); a = next(it))
+            if (!erase(a))
+                break;
+    }
+};
 ```
 
 ## 三维几何
