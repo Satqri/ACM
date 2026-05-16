@@ -4425,6 +4425,12 @@ struct Lagrange{
 ```
 ## 多项式
 
+### 结论
+> 已无言，不会证的都是入。
+$$
+F(x)\%(x-t)=F(t)
+$$
+
 ### 快速傅里叶变换 FFT
 
 用法：直接当vector用，但要注意默认输入输出都是double，若要得到整数需要调用llround()
@@ -4527,411 +4533,317 @@ using Poly = Polynomial<double, complex>;
 - 单位根：$w = g^{(P-1)/n} \pmod{P}$。
 
 ```c++
-template <class T>
-struct Polynomial : public std::vector<T> {
-	#define self (*this)
-    inline static std::vector<T> w = {};
-    static constexpr auto P = T::getMod();
-
-    // 初始化单位根
-    static void initW(int r) {
-        if (static_cast<int>(w.size()) >= r) {
-            return;
+const int MOD = 998244353;
+const int G = 3;
+int norm(int x) {
+    x %= MOD;
+    if (x < 0) x += MOD;
+    return x;
+}
+int qpow(int a, int b) {
+    int res = 1;
+    a = norm(a);
+    while (b) {
+        if (b & 1) res = res * a % MOD;
+        a = a * a % MOD;
+        b >>= 1;
+    }
+    return res;
+}
+int inv(int x) {
+    return qpow(x, MOD - 2);
+}
+struct Polynomial : vector<int> {
+    using Poly = Polynomial;
+    using vector<int>::vector;
+    inline static vector<int> w{};
+    static void trim(Poly &a) {
+        while (!a.empty() && a.back() == 0) a.pop_back();
+    }
+    static void initW(int n) {
+        if ((int)w.size() >= n) return;
+        w.assign(n, 0);
+        w[n >> 1] = 1;
+        int s = qpow(G, (MOD - 1) / n);
+        for (int i = n / 2 + 1; i < n; i++) {
+            w[i] = w[i - 1] * s % MOD;
         }
-
-        w.assign(r, 0);
-        w[r >> 1] = 1;
-        T s = T(3).pow((P - 1) / r);  // 原根 3
-        for (int i = r / 2 + 1; i < r; i++) {
-            w[i] = w[i - 1] * s;
-        }
-        for (int i = r / 2 - 1; i > 0; i--) {
-            w[i] = w[i * 2];
+        for (int i = n / 2 - 1; i > 0; i--) {
+            w[i] = w[i << 1];
         }
     }
-
-    // 正变换
-    friend void dft(Polynomial &a) {
-        const int n = a.size();
+    friend void dft(Poly &a) {
+        int n = a.size();
         assert((n & (n - 1)) == 0);
         initW(n);
-
         for (int k = n >> 1; k; k >>= 1) {
             for (int i = 0; i < n; i += k << 1) {
                 for (int j = 0; j < k; j++) {
-                    T v = a[i + j + k];
-                    a[i + j + k] = (a[i + j] - v) * w[k + j];
-                    a[i + j] = a[i + j] + v;
+                    int x = a[i + j];
+                    int y = a[i + j + k];
+                    a[i + j] = x + y;
+                    if (a[i + j] >= MOD) a[i + j] -= MOD;
+                    a[i + j + k] = (x - y + MOD) % MOD * w[k + j] % MOD;
                 }
             }
         }
     }
-
-    // 逆变换
-    friend void idft(Polynomial &a) {
-        const int n = a.size();
+    friend void idft(Poly &a) {
+        int n = a.size();
         assert((n & (n - 1)) == 0);
         initW(n);
-
         for (int k = 1; k < n; k <<= 1) {
             for (int i = 0; i < n; i += k << 1) {
                 for (int j = 0; j < k; j++) {
-                    T x = a[i + j];
-                    T y = a[i + j + k] * w[j + k];
-                    a[i + j + k] = x - y;
+                    int x = a[i + j];
+                    int y = a[i + j + k] * w[k + j] % MOD;
                     a[i + j] = x + y;
+                    if (a[i + j] >= MOD) a[i + j] -= MOD;
+                    a[i + j + k] = x - y;
+                    if (a[i + j + k] < 0) a[i + j + k] += MOD;
                 }
             }
         }
-
-        a *= P - (P - 1) / n;
-        std::reverse(a.begin() + 1, a.end());
+        int iv = MOD - (MOD - 1) / n;
+        for (auto &x : a) x = x * iv % MOD;
+        reverse(a.begin() + 1, a.end());
     }
-
-public:
-    using std::vector<T>::vector;
-
-    // 多项式截断 mod x^k, 保留前k项系数
-    Polynomial mod(int k) const {
-        Polynomial p = self;
-        p.resize(k);
-        return p;
-    }
-
-    // 多项式加法
-    friend Polynomial operator+(const Polynomial &a, const Polynomial &b) {
-        Polynomial p(std::max(a.size(), b.size()));
-        for (auto i = 0U; i < a.size(); i++) p[i] += a[i];
-        for (auto i = 0U; i < b.size(); i++) p[i] += b[i];
-        return p;
-    }
-
-    // 多项式减法
-    friend Polynomial operator-(const Polynomial &a, const Polynomial &b) {
-        Polynomial p(std::max(a.size(), b.size()));
-        for (auto i = 0U; i < a.size(); i++) p[i] += a[i];
-        for (auto i = 0U; i < b.size(); i++) p[i] -= b[i];
-        return p;
-    }
-
-    // 多项式取负 (系数取反)
-    friend Polynomial operator-(const Polynomial &a) {
-        int n = a.size();
-        Polynomial p(n);
-        for (int i = 0; i < n; i++) p[i] = -a[i];
-        return p;
-    }
-
-    // 多项式乘法 a * f(x)
-    friend Polynomial operator*(T a, Polynomial b) {
-        for (auto i = 0U; i < b.size(); i++) b[i] *= a;
-        return b;
-    }
-    // 多项式乘法 f(x) * b
-    friend Polynomial operator*(Polynomial a, T b) {
-        for (auto i = 0U; i < a.size(); i++) a[i] *= b;
+    Poly mod(int k) const {
+        Poly a = *this;
+        a.resize(k);
         return a;
     }
-
-    // 多项式卷积 f(x) * g(x)
-    friend Polynomial operator*(const Polynomial &a, const Polynomial &b) {
-        if (a.size() == 0 or b.size() == 0) {
-            return Polynomial();
+    friend Poly operator+(const Poly &a, const Poly &b) {
+        Poly c(max(a.size(), b.size()));
+        for (int i = 0; i < (int)a.size(); i++) {
+            c[i] += a[i];
+            if (c[i] >= MOD) c[i] -= MOD;
         }
-
-        int n = a.size() + b.size() - 1;
-        int s = 1 << std::__lg(2 * n - 1);
-        if (((P - 1) & (s - 1)) != 0 or std::min(a.size(), b.size()) < 128) {
-            Polynomial p(n);
-            for (auto i = 0U; i < a.size(); i++) {
-                for (auto j = 0U; j < b.size(); j++) {
-                    p[i + j] += a[i] * b[j];
+        for (int i = 0; i < (int)b.size(); i++) {
+            c[i] += b[i];
+            if (c[i] >= MOD) c[i] -= MOD;
+        }
+        return c;
+    }
+    friend Poly operator-(const Poly &a, const Poly &b) {
+        Poly c(max(a.size(), b.size()));
+        for (int i = 0; i < (int)a.size(); i++) {
+            c[i] += a[i];
+            if (c[i] >= MOD) c[i] -= MOD;
+        }
+        for (int i = 0; i < (int)b.size(); i++) {
+            c[i] -= b[i];
+            if (c[i] < 0) c[i] += MOD;
+        }
+        return c;
+    }
+    friend Poly operator-(Poly a) {
+        for (auto &x : a) {
+            if (x) x = MOD - x;
+        }
+        return a;
+    }
+    friend Poly operator*(Poly a, int b) {
+        b = norm(b);
+        for (auto &x : a) x = x * b % MOD;
+        return a;
+    }
+    friend Poly operator*(int b, Poly a) {
+        return a * b;
+    }
+    friend Poly operator/(Poly a, int b) {
+        return a * ::inv(b);
+    }
+    friend Poly operator*(const Poly &a, const Poly &b) {
+        if (a.empty() || b.empty()) return {};
+        int need = a.size() + b.size() - 1;
+        int n = 1 << std::__lg(2 * need - 1);
+        if (((MOD - 1) & (n - 1)) || min(a.size(), b.size()) < 128) {
+            Poly c(need);
+            for (int i = 0; i < (int)a.size(); i++) {
+                for (int j = 0; j < (int)b.size(); j++) {
+                    c[i + j] = (c[i + j] + a[i] * b[j]) % MOD;
                 }
             }
-
-            return p;
+            return c;
         }
-
-        Polynomial f = a.mod(s);
-        Polynomial g = b.mod(s);
+        Poly f = a.mod(n);
+        Poly g = b.mod(n);
         dft(f), dft(g);
-        for (int i = 0; i < s; i++) {
-            f[i] *= g[i];
+        for (int i = 0; i < n; i++) {
+            f[i] = f[i] * g[i] % MOD;
         }
         idft(f);
-        return f.mod(n);
+        return f.mod(need);
     }
-
-    friend Polynomial operator/(Polynomial a, T b) {
-        b = b.inv();
-        for (auto i = 0U; i < a.size(); i++) a[i] *= b;
+    pair<Poly, Poly> divmod(const Poly &g) const {
+        Poly f = *this;
+        Poly h = g;
+        trim(f);
+        trim(h);
+        assert(!h.empty());
+        int n = f.size();
+        int m = h.size();
+        if (n < m) {
+            return {{}, f};
+        }
+        int qn = n - m + 1;
+        Poly fr = f;
+        Poly gr = h;
+        reverse(fr.begin(), fr.end());
+        reverse(gr.begin(), gr.end());
+        fr.resize(qn);
+        gr.resize(qn);
+        Poly q = (fr * gr.inv(qn)).mod(qn);
+        reverse(q.begin(), q.end());
+        Poly r = f - q * h;
+        if (m > 1) r.resize(m - 1);
+        else r.clear();
+        trim(q);
+        trim(r);
+        return {q, r};
+    }
+    Poly mulxk(int k) const {
+        assert(k >= 0);
+        Poly a = *this;
+        a.insert(a.begin(), k, 0);
         return a;
     }
-
-    // // 多项式除法 f(x) / g(x), 返回商和余数 需要debug
-    // pair<Polynomial, Polynomial> divmod(const Polynomial &g) const {
-    //     int n = size(), m = g.size();
-    //     if (n < m) return {Polynomial{0}, *this};
-
-    //     Poly fr = *this;
-    //     reverse(fr.begin(), fr.end());
-    //     Poly gr = g;
-    //     reverse(gr.begin(), gr.end());
-
-    //     Poly qrev = (fr * gr.inv(n - m + 1)).mod(n - m + 1);
-    //     reverse(qrev.begin(), qrev.end());
-
-    //     Poly r = (*this - qrev * g).mod(m);
-    //     return {qrev, r};
-    // }
-
-    // f(x) * x^k, 多项式整体向高次移动k位
-    Polynomial mulxk(int k) const {
+    Poly divxk(int k) const {
         assert(k >= 0);
-        Polynomial b = self;
-        b.insert(b.begin(), k, 0);
-        return b;
+        if ((int)this->size() <= k) return {};
+        return Poly(this->begin() + k, this->end());
     }
-
-    // f(x) / x^k, 多项式整体向低次移动k位
-    Polynomial divxk(int k) const {
-        assert(k >= 0);
-        if (static_cast<int>(self.size()) <= k) {
-            return Polynomial{};
-        }
-        return Polynomial(self.begin() + k, self.end());
-    }
-
-    // 多项式求值 f(x)
-    T at(T x) const {
-        T ans = T{};
-        for (int i = static_cast<int>(self.size()) - 1; i >= 0; i--) {
-            ans = ans * x + self[i];
+    int at(int x) const {
+        int ans = 0;
+        x = norm(x);
+        for (int i = (int)this->size() - 1; i >= 0; i--) {
+            ans = (ans * x + (*this)[i]) % MOD;
         }
         return ans;
     }
-
-    Polynomial &operator+=(Polynomial b) { return self = self + b; }
-    Polynomial &operator-=(Polynomial b) { return self = self - b; }
-    Polynomial &operator*=(Polynomial b) { return self = self * b; }
-    Polynomial &operator*=(T b) { return self = self * b; }
-    Polynomial &operator/=(T b) { return self = self / b; }
-
-    // 求导
-    Polynomial deriv() const {
-        int n = self.size();
-        if (n <= 1) return Polynomial();
-
-        Polynomial p(n - 1);
+    Poly &operator+=(Poly b) {
+        return *this = *this + b;
+    }
+    Poly &operator-=(Poly b) {
+        return *this = *this - b;
+    }
+    Poly &operator*=(Poly b) {
+        return *this = *this * b;
+    }
+    Poly &operator*=(int b) {
+        return *this = *this * b;
+    }
+    Poly &operator/=(int b) {
+        return *this = *this / b;
+    }
+    Poly deriv() const {
+        int n = this->size();
+        if (n <= 1) return {};
+        Poly f(n - 1);
         for (int i = 1; i < n; i++) {
-            p[i - 1] = i * self[i];
+            f[i - 1] = i * (*this)[i] % MOD;
         }
-        return p;
+        return f;
     }
-
-    // 积分
-    Polynomial integr() const {
-        int n = self.size();
-        Polynomial p(n + 1);
-        std::vector<T> _inv(n + 1);
-        _inv[1] = 1;
+    Poly integr() const {
+        int n = this->size();
+        Poly f(n + 1);
+        vector<int> iv(n + 1);
+        if (n >= 1) iv[1] = 1;
         for (int i = 2; i <= n; i++) {
-            _inv[i] = _inv[P % i] * (P - P / i);
+            iv[i] = iv[MOD % i] * (MOD - MOD / i) % MOD;
         }
-        for (int i = 0; i < n; ++i) {
-            p[i + 1] = self[i] * _inv[i + 1];
+        for (int i = 0; i < n; i++) {
+            f[i + 1] = (*this)[i] * iv[i + 1] % MOD;
         }
-        return p;
+        return f;
     }
-
-    // 多项式模 x^m 的逆元
-    // assert(self[0] != 0);
-    Polynomial inv(int m = -1) const {
-        const int n = self.size();
+    Poly inv(int m = -1) const {
+        int n = this->size();
         m = m < 0 ? n : m;
-        Polynomial p = Polynomial{self.at(0).inv()};
+        assert(!this->empty());
+        assert((*this)[0] != 0);
+        Poly p{::inv((*this)[0])};
         p.reserve(4 * m);
         for (int k = 2; k / 2 < m; k <<= 1) {
-            Polynomial q = Polynomial(self.begin(), self.begin() + std::min(k, n)).mod(2 * k);
+            Poly q(this->begin(), this->begin() + min(k, n));
+            q = q.mod(2 * k);
             p.resize(2 * k);
             dft(q), dft(p);
             for (int i = 0; i < 2 * k; i++) {
-                p[i] = p[i] * (2 - p[i] * q[i]);
+                p[i] = p[i] * ((2 - p[i] * q[i] % MOD)%MOD + MOD) % MOD;
             }
             idft(p);
             p.resize(k);
         }
         return p.mod(m);
     }
-
-    Polynomial ln(int m = -1) const {
-        m = m < 0 ? self.size() : m;
+    Poly ln(int m = -1) const {
+        m = m < 0 ? this->size() : m;
         return (deriv() * inv(m)).integr().mod(m);
     }
-
-    // exp(f(x)): 1 + f(x) + f(x)^2/2! + f(x)^3/3! + ...
-    Polynomial exp(int m = -1) const {
-        m = m < 0 ? self.size() : m;
-        Polynomial p{1};
-        int k = 1;
-        while (k < m) {
+    Poly exp(int m = -1) const {
+        m = m < 0 ? this->size() : m;
+        Poly p{1};
+        for (int k = 1; k < m;) {
             k <<= 1;
-            p = (p * (Polynomial{1} - p.ln(k) + mod(k))).mod(k);
+            p = (p * (Poly{1} - p.ln(k) + mod(k))).mod(k);
         }
         return p.mod(m);
     }
-
-    // 多项式幂运算 f(x)^k, k >= 0
-    Polynomial pow(long long k, int m = -1) const {
-        m = m < 0 ? self.size() : m;
-        assert(0 <= k);
-        k = k % P;
-        if (0 <= k and k < 6) {
-            Polynomial p = self;
-            Polynomial ans{1};
-            for (; k; k /= 2) {
-                if (k & 1) {
-                    ans = (ans * p).mod(m);
-                }
-                p = (p * p).mod(m);
+    Poly pow(int k, int m = -1) const {
+        m = m < 0 ? this->size() : m;
+        assert(k >= 0);
+        k %= MOD;
+        if (k < 6) {
+            Poly a = *this;
+            Poly ans{1};
+            while (k) {
+                if (k & 1) ans = (ans * a).mod(m);
+                a = (a * a).mod(m);
+                k >>= 1;
             }
             return ans.mod(m);
         }
-
-        unsigned int i = 0;
-        while (i < self.size() and self[i] == T{}) {
-            i += 1;
+        int i = 0;
+        while (i < (int)this->size() && (*this)[i] == 0) {
+            i++;
         }
-        if (i == self.size() or __int128(k) * i >= m) {
-            return Polynomial(m, T{});
+        if (i == (int)this->size() || __int128(i) * k >= m) {
+            return Poly(m, 0);
         }
-        T v = self[i];
-        Polynomial f = divxk(i) / v;
-        return (f.ln(m - i * k) * k).exp(m - i * k).mulxk(i * k) * v.pow(k);
+        int v = (*this)[i];
+        Poly f = divxk(i) / v;
+        return (f.ln(m - i * k) * k)
+            .exp(m - i * k)
+            .mulxk(i * k) * qpow(v, k);
     }
-
-    Polynomial sqrt(int m = -1) const {
-        m = m < 0 ? self.size() : m;
-        Polynomial p{1};
-        int k = 1;
-        const T INV2 = T(1) / 2;
-        while (k < m) {
+    Poly sqrt(int m = -1) const {
+        m = m < 0 ? this->size() : m;
+        Poly p{1};
+        int inv2 = (MOD + 1) / 2;
+        for (int k = 1; k < m;) {
             k <<= 1;
-            p = (p + (mod(k) * p.inv(k)).mod(k)) * INV2;
+            p = (p + (mod(k) * p.inv(k)).mod(k)) * inv2;
         }
         return p.mod(m);
     }
-
-    friend std::istream &operator>>(std::istream &is, Polynomial &a) {
-        int n = a.size();
-        for (int i = 0; i < n; i++) {
-            is >> a[i];
+    friend istream &operator>>(istream &is, Poly &a) {
+        for (auto &x : a) {
+            is >> x;
+            x = norm(x);
         }
         return is;
     }
-
-    friend std::ostream &operator<<(std::ostream &os, const Polynomial &a) {
-        int n = a.size();
-        for (int i = 0; i < n; i++) {
-            os << a[i] << " \n"[i == n - 1];
+    friend ostream &operator<<(ostream &os, const Poly &a) {
+        for (int i = 0; i < (int)a.size(); i++) {
+            os << a[i] << " \n"[i + 1 == (int)a.size()];
         }
         return os;
     }
-	#undef self
 };
-
-template <class T, T P>
-struct ModInt {
-    // static_assert(std::is_integral_v<T>, "ModInt requires integral type.");
-    T x;
-
-    ModInt(ll x = 0) : x(norm(x % P)) {}
-
-    // 规范化 x 到 [0, P)
-    static constexpr T norm(T x) {
-        if (x < 0) return x + P;
-        if (x >= P) return x - P;
-        return x;
-        // return (x < 0 ? x + getMod() : (x >= getMod() ? x - getMod() : x));
-    }
-
-    static constexpr T getMod() { return P; }
-
-    // 模乘（适配 int 和 ll）
-    static constexpr int mul(int a, int b, int p) {
-        return 1LL * a * b % p;
-    }
-
-    static constexpr ll mul(ll a, ll b, ll p) {
-        ll res = a * b - ll(1.L * a * b / p) * p;
-        res %= p;
-        if (res < 0) res += p;
-        return res;
-    }
-
-    explicit constexpr operator T() const { return x; }
-
-    constexpr ModInt operator-() const { return ModInt(-x); }
-    constexpr ModInt pow(ll m) const {
-        ModInt a = *this;
-        ModInt res = 1;
-
-        if (m < 0) {
-            a = a.inv();
-            m = -m;
-        }
-
-        while (m) {
-            if (m & 1) res *= a;
-            a *= a;
-            m >>= 1;
-        }
-        return res;
-    }
-
-    constexpr ModInt inv() const {
-        assert(x != 0);     // 0 没有逆元
-        return pow(P - 2);  // 费马小定理 P 为质数
-    }
-
-    constexpr ModInt &operator+=(const ModInt &b) {
-        x = norm(x + b.x);
-        return *this;
-    }
-    constexpr ModInt &operator-=(const ModInt &b) {
-        x = norm(x - b.x);
-        return *this;
-    }
-    constexpr ModInt &operator*=(const ModInt &b) {
-        x = mul(x, b.x, P);
-        return *this;
-    }
-    constexpr ModInt &operator/=(const ModInt &b) {
-        return *this *= b.inv();
-    }
-
-    // 运算符重载
-    friend constexpr ModInt operator+(ModInt a, const ModInt &b) { return a += b; }
-    friend constexpr ModInt operator-(ModInt a, const ModInt &b) { return a -= b; }
-    friend constexpr ModInt operator*(ModInt a, const ModInt &b) { return a *= b; }
-    friend constexpr ModInt operator/(ModInt a, const ModInt &b) { return a /= b; }
-    friend constexpr bool operator==(const ModInt &a, const ModInt &b) { return a.x == b.x; }
-    friend constexpr bool operator!=(const ModInt &a, const ModInt &b) { return a.x != b.x; }
-
-    friend std::istream &operator>>(std::istream &is, ModInt &a) {
-        ll v;
-        is >> v;
-        a = ModInt(v);
-        return is;
-    }
-
-    friend std::ostream &operator<<(std::ostream &os, const ModInt &a) {
-        return os << a.x;
-    }
-};
-
-using Z = ModInt<ll, 998244353>;
-using Poly = Polynomial<Z>;
+using Poly = Polynomial;
 ```
 
 ### 快速沃尔什变换 FWT
