@@ -4531,6 +4531,39 @@ using Poly = Polynomial<double, complex>;
   - $P_2=469762049=7\cdot 2^{26}+1$
   - $P_3=1224736769=73\cdot 2^{24}+1$
 - 单位根：$w = g^{(P-1)/n} \pmod{P}$。
+```c++
+Poly c = a + b;        // 加法
+Poly c = a - b;        // 减法
+Poly c = -a;           // 取负
+Poly c = a * b;        // 多项式乘法 / 卷积
+Poly c = a * k;        // 多项式乘常数
+Poly c = k * a;        // 常数乘多项式
+Poly c = a / k;        // 多项式除常数，等价于乘 k 的逆元
+
+Poly b = a.mod(n);     // 截断，只保留前 n 项，即 mod x^n
+
+Poly g = f.inv(n);     // 多项式求逆，满足 f * g = 1 mod x^n，要求 f[0] != 0
+Poly g = f.ln(n);      // 多项式求 ln，要求 f[0] == 1
+Poly g = f.exp(n);     // 多项式求 exp，要求 f[0] == 0
+Poly g = f.pow(k, n);  // 多项式 k 次幂，求 f^k mod x^n，要求 k >= 0
+Poly g = f.sqrt(n);    // 多项式开根，求 g^2 = f mod x^n，通常要求 f[0] == 1
+
+Poly df = f.deriv();   // 求导
+Poly F = f.integr();   // 积分，常数项为 0
+
+auto [q, r] = f.divmod(g); // 多项式除法，f = q * g + r，要求 g 非零且 deg(r) < deg(g)
+
+Poly g = f.mulxk(k);   // 乘 x^k，前面补 k 个 0
+Poly g = f.divxk(k);   // 除 x^k，删掉前 k 项
+
+int y = f.at(x);       // 单点评估，求 f(x)
+
+f += g;                // f = f + g
+f -= g;                // f = f - g
+f *= g;                // f = f * g
+f *= k;                // f = f * k
+f /= k;                // f = f / k
+```
 
 ```c++
 const int MOD = 998244353;
