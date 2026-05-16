@@ -1872,6 +1872,183 @@ signed main(){
 }
 ```
 
+## FHQ
+按照值split
+```cpp
+mt19937_64 rnd(time(0));
+struct fhq{
+    struct edge{
+        int l,r,val,sz,rndnum;
+        edge(int val):l(0),r(0),val(val),sz(1),rndnum(rnd()){}
+    };
+    vector<edge> node;
+    int root;
+    fhq(){
+        root=0;
+        node.emplace_back(0);
+        node.front().sz=0;
+    }
+    int newnode(int val){
+        node.emplace_back(val);
+        return node.size()-1;
+    }
+    void pushup(int id){
+        node[id].sz=node[node[id].l].sz+node[node[id].r].sz+1;
+    }
+    //分成值域在[-INF,val] (val,INF)的两棵子树
+    pair<int,int> split(int id,int val){
+        if(!id) return {0,0};
+        if(node[id].val<=val){
+            auto [x,y]=split(node[id].r,val);
+            node[id].r=x;
+            pushup(id);
+            return {id,y};
+        }else{
+            auto [x,y]=split(node[id].l,val);
+            node[id].l=y;
+            pushup(id);
+            return {x,id};
+        }
+    }
+    int merge(int x,int y){
+        if(!x||!y) return x+y;
+        if(node[x].rndnum<node[y].rndnum){
+            node[x].r=merge(node[x].r,y);
+            pushup(x);
+            return x;
+        }else{
+            node[y].l=merge(x,node[y].l);
+            pushup(y);
+            return y;
+        }
+    }
+    //加入元素val
+    void insert(int val){
+        auto [x,y]=split(root,val);
+        int z=newnode(val);
+        root=merge(merge(x,z),y);
+    }
+    //删除元素val
+    void del(int val){
+        int x,y,z;
+        auto [ll,r]=split(root,val);
+        auto [l,mid]=split(ll,val-1);
+        mid=merge(node[mid].l,node[mid].r);
+        root=merge(merge(l,mid),r);
+    }
+    //求val的排名
+    int getrnk(int val){
+        auto [x,y]=split(root,val-1);
+        int ans=node[x].sz+1;
+        root=merge(x,y);
+        return ans;
+    }
+    //求第k小元素
+    int topk(int k,int id=-1){
+        if(id==-1) id=root;
+        int lsz=node[node[id].l].sz;
+        if(k==lsz+1){
+            return node[id].val;
+        }else if(k<=lsz){
+            return topk(k,node[id].l);
+        }else{
+            return topk(k-lsz-1,node[id].r);
+        }
+    }
+    //获取前驱
+    int getpre(int val){
+        auto [x,y]=split(root,val-1);
+        int ans=topk(node[x].sz,x);
+        root=merge(x,y);
+        return ans;
+    }
+    //获取后继
+    int getnxt(int val){
+        auto [x,y]=split(root,val);
+        int ans=topk(1,y);
+        root=merge(x,y);
+        return ans;
+    }
+};
+```
+按照下标split，懒标记
+```cpp
+mt19937 rnd(time(0));
+struct fhq{
+    struct edge{
+        int l,r,val,sz,rndnum,rev;
+        edge(int val):l(0),r(0),val(val),sz(1),rndnum(rnd()),rev(0){}
+    };
+    vector<edge> node;
+    int root;
+    fhq(){
+        root=0;
+        node.emplace_back(0);
+        node.front().sz=0;
+    }
+    int newnode(int val){
+        node.emplace_back(val);
+        return node.size()-1;
+    }
+    void pushup(int id){
+        node[id].sz=node[node[id].l].sz+node[node[id].r].sz+1;
+    }
+    void doreverse(int x){
+        swap(node[x].l,node[x].r);
+    }
+    void pushdown(int id){
+        if(node[id].rev){
+            node[node[id].l].rev^=1;
+            node[node[id].r].rev^=1;
+            doreverse(node[id].l);
+            doreverse(node[id].r);
+            node[id].rev=0;
+        }
+    }
+    pair<int,int> split(int id,int val){
+        if(!id) return {0,0};
+        pushdown(id);
+        if(node[node[id].l].sz+1<=val){
+            auto [x,y]=split(node[id].r,val-(node[node[id].l].sz+1));
+            node[id].r=x;
+            pushup(id);
+            return {id,y};
+        }else{
+            auto [x,y]=split(node[id].l,val);
+            node[id].l=y;
+            pushup(id);
+            return {x,id};
+        }
+    }
+    int merge(int x,int y){
+        if(!x||!y) return x+y;
+        if(node[x].rndnum<node[y].rndnum){
+            pushdown(x);
+            node[x].r=merge(node[x].r,y);
+            pushup(x);
+            return x;
+        }else{
+            pushdown(y);
+            node[y].l=merge(x,node[y].l);
+            pushup(y);
+            return y;
+        }
+    }
+    //加入元素val
+    void insert(int val){
+        auto [x,y]=split(root,val);
+        int z=newnode(val);
+        root=merge(merge(x,z),y);
+    }
+    void reve(int x,int y){
+        auto [ll,r]=split(root,y);
+        auto [l,mid]=split(ll,x-1);
+        node[mid].rev^=1;
+        doreverse(mid);
+        merge(merge(l,mid),r);
+    }
+};
+```
 # 字符串
 
 ## 序列自动机
