@@ -4020,6 +4020,43 @@ struct Linear_basis {
 };
 ```
 
+## 带删线性基
+
+```cpp
+struct Linear_basis {
+    vector<int> p;
+    vector<int> t; // 过期时间
+    int n;
+    Linear_basis(int n = 64) : n(n), p(n, 0), t(n, 0) {}
+    // 插入一个数x，过期时间为k时刻
+    void add(int x, int k) {
+        if (x == 0)
+            return;
+        for (int i = n - 1; ~i; --i) {
+            if (!((x >> i) & 1))
+                continue;
+            if (p[i] == 0) {
+                p[i] = x;
+                t[i] = k;
+                return;
+            } else if (t[i] < k) {
+                swap(p[i], x);
+                swap(t[i], k);
+            }
+            x ^= p[i];
+        }
+    }
+    // 查询time时刻x可以变成的最大值
+    int querymx(int time, int x = 0) {
+        for (int i = n - 1; ~i; --i) {
+            if (t[i] > time && !((x >> i) & 1))
+                x ^= p[i];
+        }
+        return x;
+    }
+};
+```
+
 ## 扩展欧拉定理
 
 $$
