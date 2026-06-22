@@ -464,6 +464,7 @@ struct DSU{
     }
 };
 ```
+
 ## 主席树
 
 ```cpp
@@ -522,7 +523,7 @@ struct PresidentTree{
     }
     // 询问id版本值域[x,y]的权值
     int query(int id, int x, int y){
-    	if(x > y) return 0;
+        if(x > y) return 0;
         auto querynode = [&](auto &&self, int base, int l, int r, int x, int y){
             if (x <= l && r <= y)
                 return node[base];
@@ -1149,6 +1150,7 @@ public:
     }
 };
 ```
+
 ## LCT
 
 ```cpp
@@ -1341,8 +1343,6 @@ struct LCT{
 };
 ```
 
-
-
 ### 区间
 
 ```cpp
@@ -1354,11 +1354,11 @@ struct LCT{
     struct Node{
         int fa = 0, lson = 0, rson = 0; // 父、左、右
         int val = 0;                    // 节点权值
-		int path_sum=0;
+        int path_sum=0;
         int size = 0;               // 路径汇总（异或）
         bool rev_flag = false;          // 反转标记
-		int add_lazy=0;
-		int mul_lazy=1;
+        int add_lazy=0;
+        int mul_lazy=1;
         // 若要维护其他信息，可在此添加成员变量，如：int max_val, min_val, size, add_lazy;
     };
     vector<Node> tree;
@@ -1373,8 +1373,8 @@ struct LCT{
         int l = tree[x].lson, r = tree[x].rson;
         int lv = l ? tree[l].size : 0;
         int rv = r ? tree[r].size : 0;
-		tree[x].size = tree[tree[x].lson].size + tree[tree[x].rson].size + 1;
-		tree[x].path_sum = (tree[tree[x].lson].path_sum + tree[tree[x].rson].path_sum + tree[x].val)%MOD;
+        tree[x].size = tree[tree[x].lson].size + tree[tree[x].rson].size + 1;
+        tree[x].path_sum = (tree[tree[x].lson].path_sum + tree[tree[x].rson].path_sum + tree[x].val)%MOD;
         //tree[x].path_sum = lv ^ rv ^ tree[x].val;
         /* 其他常见信息维护示例：
         // 维护路径和：
@@ -1418,34 +1418,34 @@ struct LCT{
         //     if (tree[x].rson) { /* 更新tree[tree[x].rson].val和tree[tree[x].rson].add_lazy */ }
         //     tree[x].add_lazy = 0;
         // }
-		if(tree[x].mul_lazy!=1){
-			if(tree[x].lson){
-				(tree[tree[x].lson].val*=tree[x].mul_lazy)%=MOD;
-				(tree[tree[x].lson].path_sum*=tree[x].mul_lazy)%=MOD;
-				(tree[tree[x].lson].mul_lazy*=tree[x].mul_lazy)%=MOD;
-				(tree[tree[x].lson].add_lazy*=tree[x].mul_lazy)%=MOD;
-			}
-			if(tree[x].rson){
-				(tree[tree[x].rson].val*=tree[x].mul_lazy)%=MOD;
-				(tree[tree[x].rson].path_sum*=tree[x].mul_lazy)%=MOD;
-				(tree[tree[x].rson].mul_lazy*=tree[x].mul_lazy)%=MOD;
-				(tree[tree[x].rson].add_lazy*=tree[x].mul_lazy)%=MOD;
-			}
-			tree[x].mul_lazy=1;
-		}
-		if (tree[x].add_lazy != 0) {
+        if(tree[x].mul_lazy!=1){
+            if(tree[x].lson){
+                (tree[tree[x].lson].val*=tree[x].mul_lazy)%=MOD;
+                (tree[tree[x].lson].path_sum*=tree[x].mul_lazy)%=MOD;
+                (tree[tree[x].lson].mul_lazy*=tree[x].mul_lazy)%=MOD;
+                (tree[tree[x].lson].add_lazy*=tree[x].mul_lazy)%=MOD;
+            }
+            if(tree[x].rson){
+                (tree[tree[x].rson].val*=tree[x].mul_lazy)%=MOD;
+                (tree[tree[x].rson].path_sum*=tree[x].mul_lazy)%=MOD;
+                (tree[tree[x].rson].mul_lazy*=tree[x].mul_lazy)%=MOD;
+                (tree[tree[x].rson].add_lazy*=tree[x].mul_lazy)%=MOD;
+            }
+            tree[x].mul_lazy=1;
+        }
+        if (tree[x].add_lazy != 0) {
             if (tree[x].lson) {
-				(tree[tree[x].lson].val+=tree[x].add_lazy)%=MOD;
-				(tree[tree[x].lson].path_sum+=tree[x].add_lazy*tree[tree[x].lson].size)%=MOD;
-				(tree[tree[x].lson].add_lazy+=tree[x].add_lazy)%=MOD;
-				/* 更新tree[tree[x].lson].val和tree[tree[x].lson].add_lazy */ 
-			}
+                (tree[tree[x].lson].val+=tree[x].add_lazy)%=MOD;
+                (tree[tree[x].lson].path_sum+=tree[x].add_lazy*tree[tree[x].lson].size)%=MOD;
+                (tree[tree[x].lson].add_lazy+=tree[x].add_lazy)%=MOD;
+                /* 更新tree[tree[x].lson].val和tree[tree[x].lson].add_lazy */ 
+            }
             if (tree[x].rson) {
-				(tree[tree[x].rson].val+=tree[x].add_lazy)%=MOD;
-				(tree[tree[x].rson].path_sum+=tree[x].add_lazy*tree[tree[x].rson].size)%=MOD;
-				(tree[tree[x].rson].add_lazy+=tree[x].add_lazy)%=MOD;
-				 /* 更新tree[tree[x].rson].val和tree[tree[x].rson].add_lazy */ 
-			}
+                (tree[tree[x].rson].val+=tree[x].add_lazy)%=MOD;
+                (tree[tree[x].rson].path_sum+=tree[x].add_lazy*tree[tree[x].rson].size)%=MOD;
+                (tree[tree[x].rson].add_lazy+=tree[x].add_lazy)%=MOD;
+                 /* 更新tree[tree[x].rson].val和tree[tree[x].rson].add_lazy */ 
+            }
             tree[x].add_lazy = 0;
         }
     }
@@ -1562,21 +1562,21 @@ struct LCT{
     //     tree[x].val = new_val;
     //     push_up(x);
     // }
-	void update_node_add(int x,int y,int delta){
-		split(x,y);
-		(tree[y].val+=delta)%=MOD;
-		(tree[y].path_sum+=delta*tree[y].size%MOD)%=MOD;
-		(tree[y].add_lazy+=delta)%=MOD;
-		push_up(y);
-	}
-	void update_node_mul(int x,int y,int delta){
-		split(x,y);
-		(tree[y].val*=delta)%=MOD;
-		(tree[y].path_sum*=delta)%MOD;
-		(tree[y].mul_lazy*=delta)%=MOD;
-		(tree[y].add_lazy*=delta)%=MOD;
-		push_up(y);
-	}
+    void update_node_add(int x,int y,int delta){
+        split(x,y);
+        (tree[y].val+=delta)%=MOD;
+        (tree[y].path_sum+=delta*tree[y].size%MOD)%=MOD;
+        (tree[y].add_lazy+=delta)%=MOD;
+        push_up(y);
+    }
+    void update_node_mul(int x,int y,int delta){
+        split(x,y);
+        (tree[y].val*=delta)%=MOD;
+        (tree[y].path_sum*=delta)%MOD;
+        (tree[y].mul_lazy*=delta)%=MOD;
+        (tree[y].add_lazy*=delta)%=MOD;
+        push_up(y);
+    }
     // 查询 x 到 y 路径上的信息（此处为异或和）
     int query_path(int x, int y){
         split(x, y);
@@ -1588,44 +1588,42 @@ struct LCT{
     }
 };
 signed main(){
-	cin.tie(nullptr)->sync_with_stdio(0);
-	int n,q;
-	cin>>n>>q;
-	LCT lct(n);
-	for(int i=1;i<n;i++){
-		int x,y;
-		cin>>x>>y;
-		lct.link(x,y);
-	}
-	for(int i=1;i<=n;i++){
-		lct.update_node_add(i,i,1);
-	}
-	while(q--){
-		char op;
-		cin>>op;
-		if(op=='+'){
-			int a,b,c;
-			cin>>a>>b>>c;
-			lct.update_node_add(a,b,c);
-		}else if(op=='-'){
-			int a,b,c,d;
-			cin>>a>>b>>c>>d;
-			lct.cut(a,b);
-			lct.link(c,d);
-		}else if(op=='*'){
-			int a,b,c;
-			cin>>a>>b>>c;
-			lct.update_node_mul(a,b,c);
-		}else{
-			int a,b;
-			cin>>a>>b;
-			cout<<lct.query_path(a,b)<<"\n";
-		}
-	}
+    cin.tie(nullptr)->sync_with_stdio(0);
+    int n,q;
+    cin>>n>>q;
+    LCT lct(n);
+    for(int i=1;i<n;i++){
+        int x,y;
+        cin>>x>>y;
+        lct.link(x,y);
+    }
+    for(int i=1;i<=n;i++){
+        lct.update_node_add(i,i,1);
+    }
+    while(q--){
+        char op;
+        cin>>op;
+        if(op=='+'){
+            int a,b,c;
+            cin>>a>>b>>c;
+            lct.update_node_add(a,b,c);
+        }else if(op=='-'){
+            int a,b,c,d;
+            cin>>a>>b>>c>>d;
+            lct.cut(a,b);
+            lct.link(c,d);
+        }else if(op=='*'){
+            int a,b,c;
+            cin>>a>>b>>c;
+            lct.update_node_mul(a,b,c);
+        }else{
+            int a,b;
+            cin>>a>>b;
+            cout<<lct.query_path(a,b)<<"\n";
+        }
+    }
 }
 ```
-
-
 
 ### 最值and位置
 
@@ -1639,7 +1637,7 @@ struct LCT{
         int fa = 0, lson = 0, rson = 0; // 父、左、右
         int val = 0;                    // 节点权值
         //int path_sum = 0;               // 路径汇总（异或）
-		pair<int,int> maxn;
+        pair<int,int> maxn;
         bool rev_flag = false;          // 反转标记
         // 若要维护其他信息，可在此添加成员变量，如：int max_val, min_val, size, add_lazy;
     };
@@ -1655,8 +1653,8 @@ struct LCT{
         int l = tree[x].lson, r = tree[x].rson;
         auto lv = l ? tree[l].maxn : make_pair(-INF,0ll);
         auto rv = r ? tree[r].maxn : make_pair(-INF,0ll);
-		tree[x].maxn={tree[x].val,x};
-		tree[x].maxn=max({tree[x].maxn,lv,rv});
+        tree[x].maxn={tree[x].val,x};
+        tree[x].maxn=max({tree[x].maxn,lv,rv});
         //tree[x].path_sum = lv ^ rv ^ tree[x].val;
         /* 其他常见信息维护示例：
         // 维护路径和：
@@ -1812,7 +1810,7 @@ struct LCT{
     void update_node(int x, int new_val){
         splay(x);
         tree[x].val = new_val;
-		tree[x].maxn={new_val,x};
+        tree[x].maxn={new_val,x};
         push_up(x);
     }
     // 查询 x 到 y 路径上的信息（此处为异或和）
@@ -1826,54 +1824,56 @@ struct LCT{
     }
 };
 struct edge{
-	int x,y,a,b;
+    int x,y,a,b;
 };
 void solve(){
-	int n,m;
-	cin>>n>>m;
-	LCT lct(n+m);
-	vector<edge> v(m+1);
-	for(int i=1;i<=m;i++){
-		cin>>v[i].x>>v[i].y>>v[i].a>>v[i].b;
-	}
-	sort(v.begin()+1,v.end(),[&](const auto &a,const auto &b){
-		return a.a<b.a;
-	});
-	int ans=INF;
-	for(int i=1;i<=m;i++){
-		auto [x,y,a,b]=v[i];
-		if(!lct.is_connected(x,y)){
-			lct.link(x,i+n);
-			lct.link(y,i+n);
-			lct.update_node(i+n,b);
-		}else{
-			auto [maxn,pos]=lct.query_path(x,y);
-			if(b<=maxn){
-				lct.cut(v[pos-n].x,pos);
-				lct.cut(v[pos-n].y,pos);
-				lct.link(x,i+n);
-				lct.link(y,i+n);
-				lct.update_node(i+n,b);
-			}
-		}
-		if(lct.is_connected(1,n)){
-			ans=min(ans,a+lct.query_path(1,n).first);
-		}
-	}
-	if(ans==INF) cout<<-1<<"\n";
-	else cout<<ans<<"\n";
+    int n,m;
+    cin>>n>>m;
+    LCT lct(n+m);
+    vector<edge> v(m+1);
+    for(int i=1;i<=m;i++){
+        cin>>v[i].x>>v[i].y>>v[i].a>>v[i].b;
+    }
+    sort(v.begin()+1,v.end(),[&](const auto &a,const auto &b){
+        return a.a<b.a;
+    });
+    int ans=INF;
+    for(int i=1;i<=m;i++){
+        auto [x,y,a,b]=v[i];
+        if(!lct.is_connected(x,y)){
+            lct.link(x,i+n);
+            lct.link(y,i+n);
+            lct.update_node(i+n,b);
+        }else{
+            auto [maxn,pos]=lct.query_path(x,y);
+            if(b<=maxn){
+                lct.cut(v[pos-n].x,pos);
+                lct.cut(v[pos-n].y,pos);
+                lct.link(x,i+n);
+                lct.link(y,i+n);
+                lct.update_node(i+n,b);
+            }
+        }
+        if(lct.is_connected(1,n)){
+            ans=min(ans,a+lct.query_path(1,n).first);
+        }
+    }
+    if(ans==INF) cout<<-1<<"\n";
+    else cout<<ans<<"\n";
 }
 signed main(){
-	cin.tie(nullptr)->sync_with_stdio(0);
-	int t=1;
-	//cin>>t;
-	while(t--) solve();
-	return 0;
+    cin.tie(nullptr)->sync_with_stdio(0);
+    int t=1;
+    //cin>>t;
+    while(t--) solve();
+    return 0;
 }
 ```
 
 ## FHQ
+
 按照值split
+
 ```cpp
 mt19937_64 rnd(time(0));
 struct fhq{
@@ -1971,7 +1971,9 @@ struct fhq{
     }
 };
 ```
+
 按照下标split，懒标记
+
 ```cpp
 mt19937 rnd(time(0));
 struct fhq{
@@ -2049,6 +2051,7 @@ struct fhq{
     }
 };
 ```
+
 # 字符串
 
 ## 序列自动机
@@ -3048,8 +3051,8 @@ struct matrix{
     matrix operator*(const matrix &e) const{
         matrix ans(n,e.m);
         for(int i=0;i<n;i++){
-	        for(int k=0;k<m;k++){
-	            for(int j=0;j<e.m;j++){
+            for(int k=0;k<m;k++){
+                for(int j=0;j<e.m;j++){
                     ans.v[i][j]+=v[i][k]*e.v[k][j];
                 }
             }
@@ -3240,11 +3243,11 @@ struct matrix{
                 for(int j=0;j<n;j++){
                     if(j==i) continue;
                     int k=v[j][column];
-					if(k){
-						for(int z=column;z<m;z++){
-							v[j][z]^=v[i][z];
-						}
-					}
+                    if(k){
+                        for(int z=column;z<m;z++){
+                            v[j][z]^=v[i][z];
+                        }
+                    }
                 }
                 break;
             }
@@ -3347,7 +3350,7 @@ signed main(){
 
 ## 卡特兰数
 
-	有一个大小为 $n×n$ 的方格图，左下角为 $(0,0)$ ，右上角为 $(n,n)$ ，从左下角开始每次只能向右或者向上走一个单位，不能走到 $y=x$ 上方（但可以触碰），有几种可能的路径
+    有一个大小为 $n×n$ 的方格图，左下角为 $(0,0)$ ，右上角为 $(n,n)$ ，从左下角开始每次只能向右或者向上走一个单位，不能走到 $y=x$ 上方（但可以触碰），有几种可能的路径
 
 前几项：$1\ 1\ 2\ 5\ 14\ 42$
 
@@ -3382,7 +3385,6 @@ C(a,b,k)=\begin{cases}
 \binom{a+b}{a}-\binom{a+b}{a+k},&else
 \end{cases}
 $$
-
 
 ## MillerRabin
 
@@ -3566,8 +3568,6 @@ struct EulerSieve {
 };
 ```
 
-
-
 ## 直接求欧拉函数
 
 ```cpp
@@ -3584,8 +3584,6 @@ int phi(int n){
 }
 ```
 
-
-
 ## 线性筛莫比乌斯函数
 
 ```cpp
@@ -3594,7 +3592,7 @@ struct EulerSieve{
     vector<int> prime;
     vector<bool> isprime;
     vector<int> mu;
-    
+
     EulerSieve(int n) : n(n), isprime(n + 1, true), mu(n + 1){
         isprime[0] = isprime[1] = false;
         mu[0] = 0;
@@ -3617,8 +3615,6 @@ struct EulerSieve{
 };
 ```
 
-
-
 ## 莫比乌斯函数
 
 $$
@@ -3628,8 +3624,6 @@ $$
 (-1)^r, & \text{若} n \text{是} r \text{个} (r \geq 1) \text{不同素数的乘积}
 \end{cases}
 $$
-
-
 
 ## 线性筛约数个数
 
@@ -3733,8 +3727,6 @@ struct EulerSieve{
     }
 };
 ```
-
-
 
 ## 组合数学
 
@@ -3951,8 +3943,6 @@ f_k &= \sum_{i=k}^n C_i^k (-1)^{i-k} g_i
 \end{aligned}
 $$
 
-
-
 ## 第二类斯特林数
 
 将n个两两不同的元素，划分为k个互不区分的非空子集的方案数
@@ -4061,6 +4051,34 @@ int quickpow(int x,int y,int mod){
 }
 ```
 
+## 光速幂
+
+```c++
+template<int MOD>
+struct lightspeedpow{
+    vector<int> powv1,powv2;
+    int blocksz;
+    lightspeedpow(int x,int maxn):blocksz(max(1ll,(int)sqrt(maxn))){
+        powv1.resize(blocksz+2);
+        powv1[0]=1;
+        for(int i=1;i<=blocksz;i++){
+            powv1[i]=powv1[i-1]*x%MOD;
+        }
+        powv2.resize(maxn/blocksz+2);
+        powv2[0]=1;
+        for(int i=1;i<=maxn/blocksz;i++){
+            powv2[i]=powv2[i-1]*powv1[blocksz]%MOD;
+        }
+    }
+    int operator()(int x){
+        if(x<1) return 1;
+        return powv2[x/blocksz]*powv1[x%blocksz]%MOD;
+    }
+};
+```
+
+
+
 ## 模意义下大整数乘法
 
 > 计算 $a\times b\mathrm{~mod~}p$，$a,b\leq p \leq 10^{18}$
@@ -4098,8 +4116,6 @@ ll mul(ll a, ll b, ll p) {
     return ans;
 }
 ```
-
-
 
 ## 线性基
 
@@ -4324,8 +4340,6 @@ i64 exCRT(const vector<i64> &a, const vector<i64> &m) {
 }
 ```
 
-
-
 ## 切比雪夫距离与曼哈顿距离之间的转化
 
 曼哈顿意义下的坐标(x,y)，可以转化成切比雪夫意义下的(x+y,x-y)
@@ -4411,6 +4425,7 @@ struct Lagrange{
     }
 };
 ```
+
 ```c++
 //值连续 O(n)
 template <int MOD>
@@ -4460,13 +4475,15 @@ struct Lagrange{
     }
 };
 ```
+
 ## 多项式
 
 ### 结论
+
 > 已无言，不会证的都是入。
-$$
-F(x)\%(x-t)=F(t)
-$$
+> $$
+> F(x)\%(x-t)=F(t)
+> $$
 
 ### 快速傅里叶变换 FFT
 
@@ -4568,14 +4585,16 @@ using Poly = Polynomial<double, complex>;
   - $P_2=469762049=7\cdot 2^{26}+1$
   - $P_3=1224736769=73\cdot 2^{24}+1$
 - 单位根：$w = g^{(P-1)/n} \pmod{P}$。
-```c++
-Poly c = a + b;        // 加法
-Poly c = a - b;        // 减法
-Poly c = -a;           // 取负
-Poly c = a * b;        // 多项式乘法 / 卷积
-Poly c = a * k;        // 多项式乘常数
-Poly c = k * a;        // 常数乘多项式
-Poly c = a / k;        // 多项式除常数，等价于乘 k 的逆元
+  
+  ```c++
+  Poly c = a + b;        // 加法
+  Poly c = a - b;        // 减法
+  Poly c = -a;           // 取负
+  Poly c = a * b;        // 多项式乘法 / 卷积
+  Poly c = a * k;        // 多项式乘常数
+  Poly c = k * a;        // 常数乘多项式
+  Poly c = a / k;        // 多项式除常数，等价于乘 k 的逆元
+  ```
 
 Poly b = a.mod(n);     // 截断，只保留前 n 项，即 mod x^n
 
@@ -4600,8 +4619,8 @@ f -= g;                // f = f - g
 f *= g;                // f = f * g
 f *= k;                // f = f * k
 f /= k;                // f = f / k
-```
 
+```
 ```c++
 const int MOD = 998244353;
 const int G = 3;
@@ -4921,7 +4940,9 @@ using Poly = Polynomial;
 变换一次复杂度 $\mathcal{O}(n\log n)$，做一次点乘 $\mathcal{O}(n)$
 一个完整的 FWT 过程是先做一次正变换，再做一次点乘，再做一次逆变换，复杂度 $\mathcal{O}(n\log n)$
 你也可以应用如下的式子做单点的变换，时间复杂度 $\mathcal{O}(n)$
+
 #### OR
+
 正变换:
 $$
 \hat{a}[s] = \sum_{x\subseteq s} a[x]
@@ -4930,7 +4951,9 @@ $$
 $$
 a[s] = \sum_{x\subseteq s} (-1)^{|s|-|x|}\hat{a}[x]
 $$
+
 #### AND FWT
+
 正变换:
 $$
 \hat{a}[s] = \sum_{x\supseteq s} a[x]
@@ -4939,7 +4962,9 @@ $$
 $$
 a[s] = \sum_{x\supseteq s} (-1)^{|x|-|s|}\hat{a}[x]
 $$
+
 #### XOR
+
 正变换:
 $$
 \hat{a}[s] = \sum_{x=0}^{N-1} a[x]\cdot (-1)^{popcount(s\&x)}
@@ -5061,8 +5086,6 @@ int main() {
 }
 ```
 
-
-
 ## 求n!质因数p的个数
 
 $[1,n]$ 每个数都可以贡献质因数 $p$
@@ -5090,7 +5113,7 @@ $n^\frac{p-1}{2} \equiv1(mod~p)\\$
 $n^\frac{p-1}{2} \equiv-1(mod~p)\\$
 
 > 如果p%4=3
->
+> 
 > $n^{(p+1)/4} mod~p$是一个解
 
 这个方程**只有两个解**且它们**互为相反数**。一个二次剩余对应一对模意义下不同的相反数（*p* 为奇素数所以相反数的奇偶性不同）。因为模 *p* 意义下可以找到 $\frac{p-1}{2}$对非零的相反数，所以在模 *p* 意义下共有 $\frac{p-1}{2}$ 个二次剩余。
@@ -5150,6 +5173,7 @@ pair<int,int> Cipolla(int n,int mod){
 - 最优时间复杂度：$O(N^{2/3})$，预处理前 $M$ 个点的前缀和（`maxn`），总复杂度 $O(M+N/\sqrt{M})$，当 $M=N^{2/3}$ 时达到最优。
 
 关键在于，构造出一个能快速计算的 $g(n)$ 与 $(f*g)(n)$ ，用 $g(1)S(n)=\Sigma^n_{i=1}(f*g)(i)-\Sigma^n_{y=2}g(y)S(\lfloor \frac ny\rfloor)$ 递归计算
+
 ```cpp
 #define int long long
 
@@ -5478,7 +5502,7 @@ struct Min25{
             else ind2[n/(n/i)]=w.size()-1;
             i=j+1;
         }
-        
+
         for(int t=0;t<eulersieve.prime.size();t++){
             int p=eulersieve.prime[t];
             for(int i=0;i<w.size()&&p<=w[i]/p;i++){
@@ -5539,8 +5563,6 @@ signed main(){
     return 0;
 }
 ```
-
-
 
 ## 离线算法
 
@@ -5829,31 +5851,38 @@ signed main(){
 ### Zobrist Hash
 
 用于棋盘状态压缩，每个位置的每个棋子状态（例如（1,1）位置为黑棋）使用 `mt19937_64` 赋予一个随机值，最后整个棋盘的状态等于所有棋子的异或和
+
 ## 狄利克雷卷积
+
 定义
 $$
 (f * g)(n) = \sum_{k \mid n} f(k) g\left(\frac{n}{k}\right) = \sum_{k \ell = n} f(k) g(\ell).
 $$
 常见卷积
+
 1. 单位函数 $\varepsilon$ 是莫比乌斯函数 $\mu$ 和常数函数 $1$ 的 Dirichlet 卷积：
-$$
-\varepsilon = \mu * 1 \quad \Longleftrightarrow \quad \varepsilon(n) = \sum_{d \mid n} \mu(d).
-$$
+   
+   $$
+   \varepsilon = \mu * 1 \quad \Longleftrightarrow \quad \varepsilon(n) = \sum_{d \mid n} \mu(d).
+   $$
 
 2. 除数个数函数 $\tau$ 是常数函数 $1$ 和它自身的 Dirichlet 卷积：
-$$
-\tau = 1 * 1 \quad \Longleftrightarrow \quad \tau(n) = \sum_{d \mid n} 1.
-$$
+   
+   $$
+   \tau = 1 * 1 \quad \Longleftrightarrow \quad \tau(n) = \sum_{d \mid n} 1.
+   $$
 
 3. 除数和函数 $\sigma$ 是恒等函数 $\operatorname{id}$ 和常数函数 $1$ 的 Dirichlet 卷积：
-$$
-\sigma = \operatorname{id} * 1 \quad \Longleftrightarrow \quad \sigma(n) = \sum_{d \mid n} d.
-$$
+   
+   $$
+   \sigma = \operatorname{id} * 1 \quad \Longleftrightarrow \quad \sigma(n) = \sum_{d \mid n} d.
+   $$
 
 4. 欧拉函数 $\varphi$ 是恒等函数 $\operatorname{id}$ 和莫比乌斯函数 $\mu$ 的 Dirichlet 卷积：
-$$
-\varphi = \operatorname{id} * \mu \quad \Longleftrightarrow \quad \varphi(n) = \sum_{d \mid n} d \cdot \mu\left( \frac{n}{d} \right).
-$$
+   
+   $$
+   \varphi = \operatorname{id} * \mu \quad \Longleftrightarrow \quad \varphi(n) = \sum_{d \mid n} d \cdot \mu\left( \frac{n}{d} \right).
+   $$
 
 # 图论
 
@@ -6032,7 +6061,7 @@ struct Flow{
 根据最大流最小割定理，最大流=最小割，直接套用最大流即可
 
 $dep[x]!=-1$，表示属于割边，$x$ 与 $s$ 联通
-  
+
 ### 最小费用最大流
 
 在网络上对每条边 $(u,v)$ 给定一个权值 $w(u,v)$，称为费用，含义是单位流量通过 $(u,v)$ 所花费的代价，对于 $G$ 所有可能的最大流中总费用最小的为最小费用最大流，SSP算法，$O(nm+n^2f)$，其中 $f$ 为网络最大流
@@ -6126,115 +6155,115 @@ zkw
 
 ```cpp
 struct MinCostFlow {
-	const int INF = 1e18;
-	struct edge {
-		int y, f, c;
-		edge(int y, int f, int c) :y(y), f(f), c(c) {}
-	};
-	const int n;
-	vector<edge> e;
-	vector<vector<int>> g;
-	vector<int> h, dis, pre;
-	vector<int> it;
-	vector<char> vis;
+    const int INF = 1e18;
+    struct edge {
+        int y, f, c;
+        edge(int y, int f, int c) :y(y), f(f), c(c) {}
+    };
+    const int n;
+    vector<edge> e;
+    vector<vector<int>> g;
+    vector<int> h, dis, pre;
+    vector<int> it;
+    vector<char> vis;
 
-	MinCostFlow(int n) :n(n), g(n + 1) {}
-	//x->y，流量f，费用c
-	void add(int x, int y, int f, int c) {
-		g[x].push_back(e.size());
-		e.emplace_back(y, f, c);
-		g[y].push_back(e.size());
-		e.emplace_back(x, 0, -c);
-	}
-	void spfa(int s) {
-		h.assign(n + 1, INF);
-		deque<int> q;
-		vector<bool> vis(n + 1, 0);
-		h[s] = 0;
-		q.push_back(s);
-		vis[s] = 1;
-		while (!q.empty()) {
-			int u = q.front();
-			q.pop_front();
-			vis[u] = 0;
-			for (int id : g[u]) {
-				const auto& ed = e[id];
-				if (ed.f == 0) continue;
-				int v = ed.y;
-				int nd = h[u] + ed.c;
-				if (nd < h[v]) {
-					h[v] = nd;
-					if (!vis[v]) {
-						if (!q.empty() && nd < h[q.front()]) q.push_front(v);
-						else q.push_back(v);
-						vis[v] = 1;
-					}
-				}
-			}
-		}
-	}
-	bool dijkstra(int s, int t) {
-		dis.assign(n + 1, INF);
-		pre.assign(n + 1, -1);
-		priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-		dis[s] = 0; pq.emplace(0, s);
-		while (!pq.empty()) {
-			auto [d, u] = pq.top(); pq.pop();
-			if (d != dis[u]) continue;
-			for (int id : g[u]) {
-				const auto& ed = e[id];
-				if (ed.f == 0) continue;
-				int v = ed.y;
-				int nd = d + ed.c + h[u] - h[v];
-				if (nd < dis[v]) {
-					dis[v] = nd; pre[v] = id;
-					pq.emplace(nd, v);
-				}
-			}
-		}
-		return dis[t] != INF;
-	}
-	int dfs(int u, int t, int f) {
-		if (u == t || !f) return f;
-		vis[u] = 1;
-		int used = 0;
-		for (int& k = it[u]; k < (int)g[u].size(); ++k) {
-			int id = g[u][k], v = e[id].y;
-			if (!e[id].f || vis[v]) continue;
-			if (e[id].c + h[u] - h[v] != 0) continue;
-			int pushed = dfs(v, t, min(f, e[id].f));
-			if (pushed) {
-				e[id].f -= pushed;
-				e[id ^ 1].f += pushed;
-				used += pushed;
-				f -= pushed;
-				if (!f) break;
-			}
-		}
-		return used;
-	}
+    MinCostFlow(int n) :n(n), g(n + 1) {}
+    //x->y，流量f，费用c
+    void add(int x, int y, int f, int c) {
+        g[x].push_back(e.size());
+        e.emplace_back(y, f, c);
+        g[y].push_back(e.size());
+        e.emplace_back(x, 0, -c);
+    }
+    void spfa(int s) {
+        h.assign(n + 1, INF);
+        deque<int> q;
+        vector<bool> vis(n + 1, 0);
+        h[s] = 0;
+        q.push_back(s);
+        vis[s] = 1;
+        while (!q.empty()) {
+            int u = q.front();
+            q.pop_front();
+            vis[u] = 0;
+            for (int id : g[u]) {
+                const auto& ed = e[id];
+                if (ed.f == 0) continue;
+                int v = ed.y;
+                int nd = h[u] + ed.c;
+                if (nd < h[v]) {
+                    h[v] = nd;
+                    if (!vis[v]) {
+                        if (!q.empty() && nd < h[q.front()]) q.push_front(v);
+                        else q.push_back(v);
+                        vis[v] = 1;
+                    }
+                }
+            }
+        }
+    }
+    bool dijkstra(int s, int t) {
+        dis.assign(n + 1, INF);
+        pre.assign(n + 1, -1);
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+        dis[s] = 0; pq.emplace(0, s);
+        while (!pq.empty()) {
+            auto [d, u] = pq.top(); pq.pop();
+            if (d != dis[u]) continue;
+            for (int id : g[u]) {
+                const auto& ed = e[id];
+                if (ed.f == 0) continue;
+                int v = ed.y;
+                int nd = d + ed.c + h[u] - h[v];
+                if (nd < dis[v]) {
+                    dis[v] = nd; pre[v] = id;
+                    pq.emplace(nd, v);
+                }
+            }
+        }
+        return dis[t] != INF;
+    }
+    int dfs(int u, int t, int f) {
+        if (u == t || !f) return f;
+        vis[u] = 1;
+        int used = 0;
+        for (int& k = it[u]; k < (int)g[u].size(); ++k) {
+            int id = g[u][k], v = e[id].y;
+            if (!e[id].f || vis[v]) continue;
+            if (e[id].c + h[u] - h[v] != 0) continue;
+            int pushed = dfs(v, t, min(f, e[id].f));
+            if (pushed) {
+                e[id].f -= pushed;
+                e[id ^ 1].f += pushed;
+                used += pushed;
+                f -= pushed;
+                if (!f) break;
+            }
+        }
+        return used;
+    }
 
-	pair<int, int> work(int s, int t) {
-		spfa(s);
-		int flow = 0, cost = 0;
-		while (dijkstra(s, t)) {
-			for (int i = 0;i <= n;i++) if (dis[i] != INF) h[i] += dis[i];
-			if (it.size() != n + 1) it.assign(n + 1, 0);
-			else fill(it.begin(), it.end(), 0);
-			if (vis.size() != n + 1) vis.assign(n + 1, 0);
-			const int unit_cost = h[t] - h[s];
-			int aug;
-			do {
-				fill(vis.begin(), vis.end(), 0);
-				aug = dfs(s, t, INF);
-				if (aug) {
-					flow += aug;
-					cost += aug * unit_cost;
-				}
-			} while (aug);
-		}
-		return { flow,cost };
-	}
+    pair<int, int> work(int s, int t) {
+        spfa(s);
+        int flow = 0, cost = 0;
+        while (dijkstra(s, t)) {
+            for (int i = 0;i <= n;i++) if (dis[i] != INF) h[i] += dis[i];
+            if (it.size() != n + 1) it.assign(n + 1, 0);
+            else fill(it.begin(), it.end(), 0);
+            if (vis.size() != n + 1) vis.assign(n + 1, 0);
+            const int unit_cost = h[t] - h[s];
+            int aug;
+            do {
+                fill(vis.begin(), vis.end(), 0);
+                aug = dfs(s, t, INF);
+                if (aug) {
+                    flow += aug;
+                    cost += aug * unit_cost;
+                }
+            } while (aug);
+        }
+        return { flow,cost };
+    }
 };
 ```
 
@@ -6242,11 +6271,11 @@ struct MinCostFlow {
 
 1. 在残量图中沿着正向边流量未满或者反向边有流量的边跑dfs，找到可达点。
 2. 最小点覆盖包括
-	- 左边不可达的点
-	- 右边可达的点
+   - 左边不可达的点
+   - 右边可达的点
 3. 最大独立集即是最小点覆盖的补
-	- 左边可达的点
-	- 右边不可达的点
+   - 左边可达的点
+   - 右边不可达的点
 
 ## 差分约束
 
@@ -6366,8 +6395,6 @@ signed main(){
     return 0;
 }
 ```
-
-
 
 ## 割点与桥
 
@@ -6761,75 +6788,73 @@ signed main(){
 #include<bits/stdc++.h>
 using namespace std;
 void solve(){
-	int n,m;
-	cin>>n>>m;
-	vector<vector<pair<int,int>>> v(n+1);
-	vector<pair<int,int>> e(m+1);
-	for(int i=1;i<=m;i++){
-		int x,y;
-		cin>>x>>y;
-		if(x==y) continue;
-		e[i]={x,y};
-		v[x].emplace_back(y,i);
-		v[y].emplace_back(x,i);
-	}
-	int cnt=0;
+    int n,m;
+    cin>>n>>m;
+    vector<vector<pair<int,int>>> v(n+1);
+    vector<pair<int,int>> e(m+1);
+    for(int i=1;i<=m;i++){
+        int x,y;
+        cin>>x>>y;
+        if(x==y) continue;
+        e[i]={x,y};
+        v[x].emplace_back(y,i);
+        v[y].emplace_back(x,i);
+    }
+    int cnt=0;
     vector<int> dfn(n+1,0),low(n+1,0);
     stack<int> st;
     vector<vector<int>> pbcc;
-	vector<vector<int>> pbccedge;
+    vector<vector<int>> pbccedge;
     function<void(int,int,int)> tarjan=[&](int x,int root,int pid){
         low[x]=dfn[x]=++cnt;
         if(x==root&&v[x].size()==0){
             pbcc.push_back({});
             pbcc.back().push_back(x);
-			pbccedge.emplace_back();
+            pbccedge.emplace_back();
             return;
         }
         for(auto &[p,id]:v[x]){
-			if(id==pid) continue;
+            if(id==pid) continue;
             if(!dfn[p]){
-				st.push(id);
+                st.push(id);
                 tarjan(p,root,id);
                 low[x]=min(low[x],low[p]);
                 if(low[p]>=dfn[x]){
-					pbccedge.emplace_back();
-					while(st.top()!=id){
-						pbccedge.back().push_back(st.top());
-						st.pop();
-					}
-					pbccedge.back().push_back(id);
-					st.pop();
-					pbcc.emplace_back();
-					for(auto &t:pbccedge.back()){
-						pbcc.back().push_back(e[t].first);
-						pbcc.back().push_back(e[t].second);
-					}
-					sort(pbcc.back().begin(),pbcc.back().end());
-					pbcc.back().erase(unique(pbcc.back().begin(),pbcc.back().end()),pbcc.back().end());
-				}
+                    pbccedge.emplace_back();
+                    while(st.top()!=id){
+                        pbccedge.back().push_back(st.top());
+                        st.pop();
+                    }
+                    pbccedge.back().push_back(id);
+                    st.pop();
+                    pbcc.emplace_back();
+                    for(auto &t:pbccedge.back()){
+                        pbcc.back().push_back(e[t].first);
+                        pbcc.back().push_back(e[t].second);
+                    }
+                    sort(pbcc.back().begin(),pbcc.back().end());
+                    pbcc.back().erase(unique(pbcc.back().begin(),pbcc.back().end()),pbcc.back().end());
+                }
             }else if(dfn[p]<dfn[x]){
-				st.push(id);
+                st.push(id);
                 low[x]=min(low[x],dfn[p]);
             }
         }
     };
-	for(int i=1;i<=n;i++){
-		if(!dfn[i]){
-			tarjan(i,i,-1);
-		}
-	}
+    for(int i=1;i<=n;i++){
+        if(!dfn[i]){
+            tarjan(i,i,-1);
+        }
+    }
 }
 signed main(){
-	cin.tie(nullptr)->sync_with_stdio(0);
-	int t=1;
-	cin>>t;
-	while(t--) solve();
-	return 0;
+    cin.tie(nullptr)->sync_with_stdio(0);
+    int t=1;
+    cin>>t;
+    while(t--) solve();
+    return 0;
 }
 ```
-
-
 
 - 外部建图无需考虑重边和自环，传入 `VBCC` 后得到V-BCC（根据题目要求处理孤立点）
 
@@ -7001,8 +7026,6 @@ struct VBCC {
     }
 };
 ```
-
-
 
 ## 最短路
 
@@ -8158,7 +8181,7 @@ struct Ex_kruskal {
                 x = fa[x][i];
             }
         }
-      	if(x==y) return x;
+          if(x==y) return x;
         for (int i = 20; i >= 0; i--) {
             if (fa[x][i] != fa[y][i]) {
                 x = fa[x][i];
@@ -8348,6 +8371,7 @@ signed main(){
     return 0;
 }
 ```
+
 ### 欧拉序+st表
 
 预处理$O(nlogn)$，询问$O(1)$
@@ -8425,6 +8449,7 @@ struct LCA {
     }
 };
 ```
+
 ## 图的匹配
 
 ### 一般图最大匹配
@@ -8574,32 +8599,35 @@ $$
 \sum_{i=1}^n \left[\sum_{j=1}^i s_j = \binom{i}{2}\right]
 $$
 
-
 ## prufer序列
 
 长度为n-2，与一个顶点标过号的点数为n的无根树一一对应。
 
 无根树转prufer序列：
+
 1. 找到编号最小的度数为1的点
 2. 删除该节点，并在序列中添加与该节点相连的节点的编号
 3. 重复1,2操作，直到只剩下两个节点
 
 prufer转无根树:
+
 1. 每次取出prufer序列中最前面的元素u
 2. 在点集中找到编号最小的没有在prufer中出现的元素v
 3. u,v连边，分别删除
 4. 最后点集剩下两个点，连边
 
 性质:
+
 1. prufer中某个编号出现的次数等于这个点在无根树中的度数-1
 2. n点的无根树唯一对应了一个长度为n-2的数列，数列中每个数都在1到n的范围内
 3. n个点的无向完全图的生成树个数：$n^{n-2}$
 4. n个节点度依次为$d_1,d_2,...,d_n$的无根树共有$\frac{(n-2)!}{\prod_{i=1}^n(d_i-1)!}$个
 5. n个点的有标号有根树共有 $n^{(n-2)}*n=n^{n-1}$ 个
- 
+
 # 计算几何
 
 ## 二维几何
+
 ### Levis
 
 ```cpp
@@ -9523,7 +9551,7 @@ struct Circle {
         l2 = Line(p, m - v);
         return 2;
     }
-	// 圆与直线交点
+    // 圆与直线交点
     int intersectionToLine(const Line &l, Point &p1, Point &p2){
         double d = l.disToLine(c);
         if (sgn(d - r) > 0)
@@ -9627,6 +9655,7 @@ struct halfplanes {
     }
 };
 ```
+
 #### 杂项
 
 ```cpp
@@ -10066,6 +10095,7 @@ auto it=tr.upper_bound({x,INF});
 if(it==tr.end()) continue;
 it->first;
 ```
+
 ## 笛卡尔树
 
 son first左儿子second右儿子
@@ -10081,22 +10111,22 @@ for(int i=1;i<=n;i++) cin>>p[i];
 stack<int> st;
 int rt=-1;
 for(int i=1;i<=n;i++){
-	if(st.empty()) rt=i;
-	else{
-		int pre=-1;
-		while(!st.empty()&&p[st.top()]>p[i]){
-			pre=st.top();
-			st.pop();
-		}
-		if(st.empty()){
-			rt=i;
-			son[rt].first=pre;
-		}else{
-			son[i].first=son[st.top()].second;
-			son[st.top()].second=i;
-		}
-	}
-	st.push(i);
+    if(st.empty()) rt=i;
+    else{
+        int pre=-1;
+        while(!st.empty()&&p[st.top()]>p[i]){
+            pre=st.top();
+            st.pop();
+        }
+        if(st.empty()){
+            rt=i;
+            son[rt].first=pre;
+        }else{
+            son[i].first=son[st.top()].second;
+            son[st.top()].second=i;
+        }
+    }
+    st.push(i);
 }
 ```
 
@@ -10196,6 +10226,7 @@ signed main(){
     return 0;
 }
 ```
+
 ## 快读快写
 
 ```cpp
@@ -10301,7 +10332,7 @@ void date(int n, int &y, int &m, int &d) {
 
 ```cpp
 for (int s = u; s; s = (s - 1) & u) {
-	// s 是 u 的一个非空子集 
+    // s 是 u 的一个非空子集 
 }
 ```
 
@@ -10318,11 +10349,13 @@ cdq分治的时候，算完贡献，记得清空BIT。
 cdq分治完记得把临时数组的排序结果移回原数组。
 
 cdq分治优化dp这类的题目，可能$[mid+1,r]$这个区间，依赖于$[l,mid]$这个区间的结果，此时的执行顺序应为
+
 1. 递归$[l,mid]$
 2. 处理$[l,mid]$对$[mid+1,r]$的贡献
 3. 再递归$[mid+1,r]$的贡献
 
 第二步的时候，先对右半部分第二维排好序，再归并，然后把右半部分还原回按照第一维排序的形式，再进行第三步操作。
+
 ```c++
 #include<bits/stdc++.h>
 using namespace std;
