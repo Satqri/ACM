@@ -7843,6 +7843,52 @@ void solve(){
 }
 ```
 
+## 拓扑排序
+
+```cpp
+bool toposort(){
+    vector<int> list;
+    queue<int> q;
+    for (int i = 1; i <= n; i++) {
+        if (in[i] == 0) q.push(i);
+    }
+    while(!q.empty()){
+        int cur = q.front(); q.pop();
+        list.push_back(cur);
+        for (auto &to : g[cur]) {
+            if (--in[to] == 0) q.push(to);
+        }
+    }
+    if (list.size() == n) {
+        for (auto &i : list) {
+            cout << i << ' ';
+        };
+        cout << '\n';
+        return true;
+    }
+    return false;
+}
+```
+
+## 拓扑序计数
+
+```cpp
+vector<int> dp(1 << n);
+dp[0] = 1;
+for (int i = 0; i < m; i++) {
+    int u, v;
+    cin >> u >> v;
+    g[v] |= 1 << u;
+}
+for (int i = 0; i < 1 << n; i++) {
+    for (int j = 0; j < n; j++) {
+        if ((g[j] & i) == g[j] && !(i >> j & 1)) {
+            (dp[i | (1 << j)] += dp[i]) %= mod;
+        }
+    }
+}
+```
+
 ## 最小路径覆盖
 
 最小路径覆盖为用最少的路径走过有向图所有点
