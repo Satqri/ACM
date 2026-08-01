@@ -2090,87 +2090,53 @@ struct SubsequenceAutomaton{
 多模式串匹配
 
 ```cpp
-template<int Base>
 struct ACAutomaton{
     vector<array<int,26>> tree;
-    vector<int> ed;
-    vector<int> fail;
-    vector<vector<int>> id;
-    vector<int> exist;
-    vector<int> tag;
-    vector<int> in;
+    vector<int> fail,ed;
     int cnt;
-    void insert(string &s,int num){
-        int u=0;
-        for(char &c:s){
-            if(!tree[u][c-Base]){
-                tree[u][c-Base]=++cnt;
-                tree.emplace_back();
-                tree.back().fill(0);
-                ed.emplace_back(0);
+    void insert(const string &s){
+        int now=0;
+        for(auto &c:s){
+            if(!tree[now][c-'a']){
+                tree[now][c-'a']=++cnt;
                 fail.emplace_back(0);
-                id.emplace_back();
-                in.emplace_back(0);
+                ed.emplace_back(0);
+                tree.emplace_back();
             }
-            u=tree[u][c-Base];
+            now=tree[now][c-'a'];
         }
-        ed[u]++;
-        id[u].push_back(num);
+        ed[now]++;
     }
     void build(){
         queue<int> q;
         for(int i=0;i<26;i++){
-            if(tree[0][i]) q.push(tree[0][i]); 
+            if(tree[0][i]) q.push(tree[0][i]);
         }
         while(!q.empty()){
-            int u=q.front();
+            int x=q.front();
             q.pop();
             for(int i=0;i<26;i++){
-                if(tree[u][i]){
-                    fail[tree[u][i]]=tree[fail[u]][i];
-                    in[tree[fail[u]][i]]++;
-                    q.push(tree[u][i]);
+                if(tree[x][i]){
+                    fail[tree[x][i]]=tree[fail[x]][i];
+                    q.push(tree[x][i]);
                 }else{
-                    tree[u][i]=tree[fail[u]][i];
+                    tree[x][i]=tree[fail[x]][i];
                 }
             }
         }
     }
-    void topo(){
-        queue<int> q;
-        for(int i=1;i<=cnt;i++){
-            if(!in[i]) q.push(i);
-        }
-        while(!q.empty()){
-            int f=q.front();
-            q.pop();
-            for(int &p:id[f]) exist[p]=tag[f];
-            int u=fail[f];
-            tag[u]+=tag[f];
-            if(!(--in[u])) q.push(u);
-        }
-    }
-    void query(string &s){
-        tag.resize(cnt+1,0);
-        int u=0,ans=0;
+    int query(const string &s){
+        int ans=0,now=0;
         for(int i=0;i<s.size();i++){
-            u=tree[u][s[i]-Base];
-            tag[u]++;
+            now=tree[now][s[i]-'a'];
+            for(int j=now;j&&ed[j]!=-1;j=fail[j]){
+                ans+=ed[j];
+                ed[j]=-1;
+            }
         }
-        topo();
+        return ans;
     }
-    ACAutomaton(vector<string> &v){
-        tree.resize(1);
-        in.resize(1,0);
-        exist.resize(v.size(),0);
-        id.resize(v.size());
-        cnt=0;
-        tree.back().fill(0);
-        fail.push_back(0);
-        ed.push_back(0);
-        for(int i=0;i<v.size();i++) insert(v[i],i);
-        build();
-    }
+    ACAutomaton():cnt(0),fail(1),ed(1),tree(1){}
 };
 ```
 
@@ -4077,8 +4043,6 @@ struct lightspeedpow{
 };
 ```
 
-
-
 ## 模意义下大整数乘法
 
 > 计算 $a\times b\mathrm{~mod~}p$，$a,b\leq p \leq 10^{18}$
@@ -4580,10 +4544,13 @@ using Poly = Polynomial<double, complex>;
 ### 快速数论变换 NTT
 
 - NTT是**整数域上的快速傅里叶变换**，用于高效求解模意义下的多项式卷积。
+
 - 要求模数 $P$ 是形如 $k \cdot 2^n + 1$ 的质数（如 $P = 998244353 = 119 \cdot 2^{23} + 1$），且有原根 $g$；如果模数为$10^9+7$，需要**三模数 NTT + CRT**， 在 3 个 NTT 友好质数下分别做 NTT 卷积，再用 Garner/CRT 合并回 $10^9+7$。常用 3 个 NTT 质数：
+  
   - $P_1=167772161=5\cdot 2^{25}+1$
   - $P_2=469762049=7\cdot 2^{26}+1$
   - $P_3=1224736769=73\cdot 2^{24}+1$
+
 - 单位根：$w = g^{(P-1)/n} \pmod{P}$。
   
   ```c++
@@ -8712,14 +8679,19 @@ struct Point{
         if(a.x!=b.x) return a.x<b.x;
         else return a.y<b.y;
     }
-    //极角排序
-    inline static bool sortPointAngle(const Point &a,const Point &b){
-        if(a.quad()!=b.quad()) return a.quad()<b.quad();
-        return (a^b)>0;
-    }
     //模长
     inline double norm() const{
         return sqrtl(x*x+y*y);
+    }
+    inline double norm2() const{
+        return x*x+y*y;
+    }
+    //极角排序
+    inline static bool sortPointAngle(const Point &a,const Point &b){
+        if(a.quad()!=b.quad()) return a.quad()<b.quad();
+        double cr=a^b;
+        if(cr!=0) return cr>0;
+        else return a.norm2()<b.norm2();
     }
     //向量方向
     //1 this在e顺时针方向
@@ -8736,6 +8708,10 @@ struct Point{
         double sinalpha=sin(alpha);
         double cosinalpha=cos(alpha);
         return {x*cosinalpha-y*sinalpha,x*sinalpha+y*cosinalpha};
+    }
+    //绕center逆时针旋转alpha角
+    Point rotate(const Point &center,double alpha) const{
+        return ((*this)-center).Spin(alpha)+center;
     }
     inline double dis(const Point &e){
         Point c=(*this)-e;
@@ -8791,6 +8767,7 @@ struct ClosestPair{
         }
         return d;
     }
+    //直接调用这个，返回最近两个点的dis，nlogn
     double getMinDist() {
         int n = p.size();
         if (n <= 1) return 1e18;
@@ -8818,6 +8795,45 @@ struct Line{
     inline double distancetopoint(const Point &e) const{
         return fabs((e-x)^y)/y.norm();
     }
+    /*
+    两直线关系：
+    0：平行不重合
+    1：有唯一交点
+    2：两直线重合
+    */
+    inline int relation(const Line &e) const{
+        if((y^e.y)!=0) return 1;
+        if(((e.x-x)^y)==0) return 2;
+        return 0;
+    }
+    /*
+    求两直线交点：
+    first=0：平行且不重合
+    first=1：有唯一交点，second 为交点
+    first=2：两直线重合
+    */
+    inline pair<int,Point> intersection(const Line &e) const{
+        double cr=y^e.y;
+        if(cr==0){
+            if(((e.x-x)^y)==0){
+                return {2,Point()};
+            }else{
+                return {0,Point()};
+            }
+        }
+        double t=((e.x-x)^e.y)/cr;
+        return {1,x+y*t};
+    }
+    //点e在直线上的投影
+    inline Point projection(const Point &e) const{
+        double t=y*(e-x)/(y*y);
+        return x+y*t;
+    }
+    //点e关于直线的对称点
+    inline Point reflection(const Point &e) const{
+        Point p=projection(e);
+        return p*2-e;
+    }
 };
 struct Segment{
     //过x,y
@@ -8829,6 +8845,47 @@ struct Segment{
         if(t<0) t=0;
         else if(t>1) t=1;
         return (e-(x+l*t)).norm();
+    }
+    //判断点e是否在线段上，包含两个端点
+    inline bool onsegment(const Point &e) const{
+        return ((y-x)^(e-x))==0&&(e-x)*(e-y)<=0;
+    }
+    //两线段是否相交
+    //端点接触、部分重合、完全重合都是true
+    inline bool intersect(const Segment &e) const{
+        double c1=(y-x)^(e.x-x);
+        double c2=(y-x)^(e.y-x);
+        double c3=(e.y-e.x)^(x-e.x);
+        double c4=(e.y-e.x)^(y-e.x);
+        if(c1==0&&onsegment(e.x)) return true;
+        if(c2==0&&onsegment(e.y)) return true;
+        if(c3==0&&e.onsegment(x)) return true;
+        if(c4==0&&e.onsegment(y)) return true;
+        return c1*c2<0&&c3*c4<0;
+    }
+    //两线段是否严格相交
+    //必须从各自内部穿过。端点接触，共线重合都是false
+    inline bool strictintersect(const Segment &e) const{
+        double c1=(y-x)^(e.x-x);
+        double c2=(y-x)^(e.y-x);
+        double c3=(e.y-e.x)^(x-e.x);
+        double c4=(e.y-e.x)^(y-e.x);
+        return c1*c2<0&&c3*c4<0;
+    }
+    /*
+    无限直线e与当前有限线段的关系：
+    0：不相交
+    1：在线段端点处相交
+    2：严格穿过线段内部
+    3：整条线段位于直线上
+    */
+    inline int relation(const Line &e) const{
+        double c1=e.y^(x-e.x);
+        double c2=e.y^(y-e.x);
+        if(c1==0&&c2==0) return 3;
+        if(c1==0||c2==0) return 1;
+        if(c1*c2<0) return 2;
+        return 0;
     }
 };
 //要先getConvex求凸包，其他的才能用
@@ -8843,154 +8900,381 @@ struct Polygon{
             cin>>p[i].x>>p[i].y;
         }
     }
+    //凸包逆时针方向排序,首尾点不重复，中间共线点不保留
     void getConvex(){
+        convexhull.clear();
         sort(p.begin(),p.end(),Point::sortxupyup);
         p.erase(unique(p.begin(),p.end(),[](const Point &a,const Point &b){
             return a.x==b.x&&a.y==b.y;
         }),p.end());
         n=p.size();
-        if(n==0) return;
-        if(n==1){
-            convexhull.push_back(p.front());
-            convexhull.push_back(p.front());
+        if(n<=1){
+            convexhull=p;
             return;
         }
-        vector<int> st1={0},st2={n-1};
-        for(int i=1;i<n;i++){
-            while(st1.size()>=2&&((p[st1.back()]-p[st1[st1.size()-2]])^(p[i]-p[st1.back()]))>0){
-                st1.pop_back();
+        vector<int> st1,st2;
+        for(int i=0;i<n;i++){
+            while(st1.size()>=2){
+                int a=st1[st1.size()-2];
+                int b=st1.back();
+                if(((p[b]-p[a])^(p[i]-p[b]))<=0){
+                    st1.pop_back();
+                }else break;
             }
             st1.push_back(i);
         }
-        for(int i=n-2;i>=0;i--){
-            while(st2.size()>=2&&((p[st2.back()]-p[st2[st2.size()-2]])^(p[i]-p[st2.back()]))>0){
-                st2.pop_back();
+        for(int i=n-1;i>=0;i--){
+            while(st2.size()>=2){
+                int a=st2[st2.size()-2];
+                int b=st2.back();
+                if(((p[b]-p[a])^(p[i]-p[b]))<=0){
+                    st2.pop_back();
+                }else break;
             }
             st2.push_back(i);
         }
-        for(int i=0;i<st1.size();i++){
-            convexhull.push_back(p[st1[i]]);
-        }
-        for(int i=1;i<st2.size();i++){
-            convexhull.push_back(p[st2[i]]);
-        }
+        st1.pop_back();
+        st2.pop_back();
+        for(auto &id:st1) convexhull.push_back(p[id]);
+        for(auto &id:st2) convexhull.push_back(p[id]);
     }
     double getPerimeter(){
+        if(convexhull.size()<=1) return 0;
         double ans=0;
-        for(int i=1;i<convexhull.size();i++){
-            ans+=convexhull[i].dis(convexhull[i-1]);
+        for(int i=0;i<convexhull.size();i++){
+            ans+=convexhull[i].dis(convexhull[(i+1)%convexhull.size()]);
         }
         return ans;
     }
     double getArea(){
-        if(convexhull.size()<4) return 0;
+        if(convexhull.size()<3) return 0;
         double ans=0;
-        for(int i=1;i<convexhull.size()-2;i++){
-            ans+=(convexhull[i]-convexhull[0])^(convexhull[i+1]-convexhull[0])/2;
+        for(int i=0;i<convexhull.size();i++){
+            ans+=convexhull[i]^convexhull[(i+1)%convexhull.size()];
         }
-        return ans;
+        return ans/2;
     }
-    //旋转卡壳求直径
+    //旋转卡壳求直径，最远点对
     double getLongest(){
-        if(convexhull.size()<4){
-            return convexhull[0].dis(convexhull[1]);
-        }
-        int j=0;
         const int sz=convexhull.size();
+        if(sz<=1) return 0;
+        if(sz==2) return convexhull[0].dis(convexhull[1]);
+        int j=1;
         double ans=0;
-        for(int i=0;i<convexhull.size()-1;i++){
-            Line line(convexhull[i],convexhull[i+1],1);
+        for(int i=0;i<sz;i++){
+            Line line(convexhull[i],convexhull[(i+1)%sz],1);
             while(line.distancetopoint(convexhull[j])<=line.distancetopoint(convexhull[(j+1)%sz])){
                 j=(j+1)%sz;
             }
-            ans=max({ans,(convexhull[i]-convexhull[j]).norm(),(convexhull[i+1]-convexhull[j]).norm()});
+            ans=max({ans,convexhull[i].dis(convexhull[j]),convexhull[(i+1)%sz].dis(convexhull[j])});
         }
         return ans;
     }
-    //旋转卡壳最小矩形覆盖
+    //旋转卡壳最小矩形覆盖，返回最小面积，四个顶点（退化就是空数组）
     pair<double,vector<Point>> minRectangleCover(){
-        vector<Point> p;
-        if(convexhull.size()<4) return {0,p};
-        int j=1,l=1,r=1;
-        double ans=1e18;
         const int sz=convexhull.size();
-        for(int i=1;i<convexhull.size();i++){
-            Line line(convexhull[i-1],convexhull[i],1);
+        vector<Point> rec;
+        if(sz<3) return {0,rec};
+        int j=0,l=0,r=0;
+        double ans=1e18;
+        {
+            Point edge=convexhull[1]-convexhull[0];
+            Line line(convexhull[0],convexhull[1],1);
+            for(int k=1;k<sz;k++){
+                if(line.distancetopoint(convexhull[k])>line.distancetopoint(convexhull[j])){
+                    j=k;
+                }
+                if(edge*(convexhull[k]-convexhull[0])<edge*(convexhull[l]-convexhull[0])){
+                    l=k;
+                }
+                if(edge*(convexhull[k]-convexhull[0])>edge*(convexhull[r]-convexhull[0])){
+                    r=k;
+                }
+            }
+        }
+        for(int i=0;i<sz;i++){
+            int ni=(i+1)%sz;
+            Point edge=convexhull[ni]-convexhull[i];
+            Line line(convexhull[i],convexhull[ni],1);
             while(line.distancetopoint(convexhull[j])<=line.distancetopoint(convexhull[(j+1)%sz])){
                 j=(j+1)%sz;
             }
-            while((convexhull[i]-convexhull[i-1])*(convexhull[(r+1)%sz]-convexhull[i-1])>=(convexhull[i]-convexhull[i-1])*(convexhull[r]-convexhull[i-1])){
+            while(edge*(convexhull[r]-convexhull[i])
+                <=edge*(convexhull[(r+1)%sz]-convexhull[i])){
                 r=(r+1)%sz;
             }
-            if(i==1) l=r;
-            while((convexhull[i-1]-convexhull[i])*(convexhull[(l+1)%sz]-convexhull[i])>=(convexhull[i-1]-convexhull[i])*(convexhull[l]-convexhull[i])){
+            while(edge*(convexhull[l]-convexhull[i])
+                >=edge*(convexhull[(l+1)%sz]-convexhull[i])){
                 l=(l+1)%sz;
             }
-            Point t1=convexhull[i]-convexhull[i-1];
-            Point t2=convexhull[r]-convexhull[i];
-            Point t3=convexhull[l]-convexhull[i-1];
-            double a=line.distancetopoint(convexhull[j]);
-            double b=t1.norm()+t1*t2/t1.norm()-t1*t3/t1.norm();
-            double tmp=a*b;
-            if(ans>tmp){
-                ans=tmp;
-                p.clear();
-                p.push_back(t1*((t1*t3)/(t1.norm()*t1.norm()))+convexhull[i-1]);
-                p.push_back(t1*(1+(t1*t2)/(t1.norm()*t1.norm()))+convexhull[i-1]);
-                Point tmp=Point{-(p[1]-p[0]).y,(p[1]-p[0]).x}*a/b;
-                p.push_back(tmp+p[1]);
-                p.push_back(tmp+p[0]);
+            double len=edge.norm();
+            double height=line.distancetopoint(convexhull[j]);
+            double left=edge*(convexhull[l]-convexhull[i])/len;
+            double right=edge*(convexhull[r]-convexhull[i])/len;
+            double area=height*(right-left);
+            if(area<ans){
+                ans=area;
+                Point unit=edge/len;
+                Point normal={-unit.y,unit.x};
+                Point p0=convexhull[i]+unit*left;
+                Point p1=convexhull[i]+unit*right;
+                rec={p0,p1,p1+normal*height,p0+normal*height};
             }
         }
-        return {ans,p};
+        return {ans,rec};
     }
-    void inpre(){
-        for(int i=1;i<convexhull.size();i++){
-            convexhull[i]=convexhull[i]-convexhull[0];
-        }
-    }
-    void infin(){
-        for(int i=1;i<convexhull.size();i++){
-            convexhull[i]=convexhull[i]+convexhull[0];
-        }
-    }
+    //判断点是否在凸包内部或边界上，logn
     bool in(Point x){
-        x=x-convexhull[0];
-        auto it1=upper_bound(convexhull.begin()+1,convexhull.end()-1,x,[](const auto &x,const auto &y){
-            return (x^y)<0;
-        });
-        if(it1==convexhull.end()-1||it1==convexhull.begin()+1){
-            return 0;
+        const int sz=convexhull.size();
+        if(sz==0) return false;
+        if(sz==1){
+            return x.x==convexhull[0].x&&x.y==convexhull[0].y;
         }
-        auto it0=prev(it1);
-        auto l=*it1-*it0;
-        auto result=(x-*it0).ordervector(l);
-        if(result==1||result==0){
-            return true;
-        }else{
-            return false;
+        if(sz==2){
+            return ((convexhull[1]-convexhull[0])^(x-convexhull[0]))==0&&(x-convexhull[0])*(x-convexhull[1])<=0;
         }
+        Point base=x-convexhull[0];
+        if(((convexhull[1]-convexhull[0])^base)<0) return false;
+        if(((convexhull[sz-1]-convexhull[0])^base)>0) return false;
+        int l=1,r=sz-1;
+        while(r-l>1){
+            int mid=(l+r)>>1;
+            if(((convexhull[mid]-convexhull[0])^base)>=0){
+                l=mid;
+            }else{
+                r=mid;
+            }
+        }
+        return ((convexhull[l+1]-convexhull[l])^(x-convexhull[l]))>=0;
+    }
+};
+struct Circle{
+    //圆心，半径
+    Point o;
+    double r;
+    Circle(Point o,double r):o(o),r(r){}
+    // 由三个不共线点构造外接圆
+    Circle(const Point &a,const Point &b,const Point &c){
+        Point ab=b-a;
+        Point ac=c-a;
+        double d=2*(ab^ac);
+        o=a+Point{(ab.norm2()*ac.y-ac.norm2()*ab.y)/d,(ab.x*ac.norm2()-ac.x*ab.norm2())/d};
+        r=o.dis(a);
+    }
+    //判断点p与圆的位置关系：
+    //0：圆外
+    //1：圆上
+    //2：圆内
+    inline int relation(const Point &p){
+        double d=o.dis(p);
+        if(d>r) return 0;
+        if(d==r) return 1;
+        return 2;
+    }
+    //判断直线e与圆的位置关系：
+    //0：相离
+    //1：相切
+    //2：相交，有两个交点
+    inline int relation(const Line &e){
+        double d=e.distancetopoint(o);
+        if(d>r) return 0;
+        if(d==r) return 1;
+        return 2;
+    }
+    //求直线e与圆的交点
+    //返回数组大小为0、1、2，分别表示相离、相切、相交
+    inline vector<Point> intersection(const Line &e){
+        Point mid=e.projection(o);
+        double d=o.dis(mid);
+        if(d>r) return {};
+        if(d==r) return {mid};
+        double len=sqrtl(r*r-d*d);
+        Point dir=e.y/e.y.norm();
+        return {mid-dir*len,mid+dir*len};
+    }
+    //判断两圆的位置关系：
+    //0：外离
+    //1：外切
+    //2：相交，有两个交点
+    //3：内切
+    //4：内含
+    //5：重合
+    inline int relation(const Circle &e){
+        double d=o.dis(e.o);
+        if(d==0&&r==e.r) return 5;
+        if(d>r+e.r) return 0;
+        if(d==r+e.r) return 1;
+        if(d<fabs(r-e.r)) return 4;
+        if(d==fabs(r-e.r)) return 3;
+        return 2;
+    }
+    //求两圆交点
+    inline vector<Point> intersection(const Circle &e){
+        int type=relation(e);
+        if(type==0||type==4||type==5) return {};
+        double d=o.dis(e.o);
+        double a=(r*r-e.r*e.r+d*d)/(2*d);
+        Point dir=(e.o-o)/d;
+        Point mid=o+dir*a;
+        if(type==1||type==3) return {mid};
+        double h=sqrtl(r*r-a*a);
+        Point vertical={-dir.y,dir.x};
+        return {mid+vertical*h,mid-vertical*h};
+    }
+    //两圆相交部分面积
+    inline double intersectionArea(const Circle &e){
+        double d=o.dis(e.o);
+        const double PI=acosl(-1.0);
+        if(d>=r+e.r) return 0;
+        if(d<=fabs(r-e.r)){
+            double R=min(r,e.r);
+            return PI*R*R;
+        }
+        double cosa=(r*r+d*d-e.r*e.r)/(2*r*d);
+        double cosb=(e.r*e.r+d*d-r*r)/(2*e.r*d);
+        cosa=max(-1.0,min(1.0,cosa));
+        cosb=max(-1.0,min(1.0,cosb));
+        double a=2*acosl(cosa);
+        double b=2*acosl(cosb);
+        return (r*r*(a-sin(a))+e.r*e.r*(b-sin(b)))/2;
+    }
+    //求点p到圆的切点
+    //圆外返回2个，圆上返回自身，圆内返回空
+    inline vector<Point> tangentPoint(const Point &p){
+        Point v=p-o;
+        double d=v.norm();
+        if(d<r) return {};
+        if(d==r) return {p};
+        double alpha=acosl(r/d);
+        Point base=v/d*r;
+        return {o+base.Spin(alpha),o+base.Spin(-alpha)};
+    }
+    //求两圆公切线
+    //返回数量可能为[0,4]
+    inline vector<Line> commontangent(const Circle &e){
+        vector<Line> ans;
+        Point d=e.o-o;
+        double d2=d.norm2();
+        if(d2==0) return ans;
+        for(int s:{-1,1}){
+            double sr=e.r*s;
+            double dr=r-sr;
+            double h2=d2-dr*dr;
+            if(h2<0) continue;
+            double h=sqrtl(h2);
+            Point vertical={-d.y,d.x};
+            for(int t:{-1,1}){
+                Point v=(d*dr+vertical*(h*t))/d2;
+                Point tangentPoint=o+v*r;
+                Point tangentDirection={-v.y,v.x};
+                ans.emplace_back(tangentPoint,tangentDirection,0);
+                if(h2==0) break;
+            }
+        }
+        return ans;
     }
 };
 Polygon Minkowski(Polygon a,Polygon b){
-    Polygon c(1);
-    c.convexhull.emplace_back(a.convexhull[0]+b.convexhull[0]);
-    for(int i=0;i+1<a.convexhull.size();i++){
-        a.convexhull[i]=a.convexhull[i+1]-a.convexhull[i];
+    if(a.convexhull.empty()||b.convexhull.empty()){
+        return Polygon(0);
     }
-    for(int i=0;i+1<b.convexhull.size();i++){
-        b.convexhull[i]=b.convexhull[i+1]-b.convexhull[i];
+    auto init=[](vector<Point> &h){
+        int k=min_element(h.begin(),h.end(),[](const Point &a,const Point &b){
+            if(a.y!=b.y) return a.y<b.y;
+            return a.x<b.x;
+        })-h.begin();
+        rotate(h.begin(),h.begin()+k,h.end());
+    };
+    init(a.convexhull);
+    init(b.convexhull);
+    auto getEdge=[](const vector<Point> &h){
+        vector<Point> edge;
+        int sz=h.size();
+        if(sz==1) return edge;
+        for(int i=0;i<sz;i++){
+            edge.push_back(h[(i+1)%sz]-h[i]);
+        }
+        return edge;
+    };
+    vector<Point> ea=getEdge(a.convexhull);
+    vector<Point> eb=getEdge(b.convexhull);
+    vector<Point> res={a.convexhull[0]+b.convexhull[0]};
+    int i=0,j=0;
+    while(i<ea.size()||j<eb.size()){
+        Point edge;
+        if(i<ea.size()&&j<eb.size()&&
+           (ea[i]^eb[j])==0&&ea[i]*eb[j]>0){
+            edge=ea[i]+eb[j];
+            i++;
+            j++;
+        }else if(j==eb.size()||(i<ea.size()&&Point::sortPointAngle(ea[i],eb[j]))){
+            edge=ea[i++];
+        }else{
+            edge=eb[j++];
+        }
+        res.push_back(res.back()+edge);
     }
-    a.convexhull.pop_back();
-    b.convexhull.pop_back();
-    c.convexhull.resize(a.convexhull.size()+b.convexhull.size()+1);
-    merge(a.convexhull.begin(),a.convexhull.end(),b.convexhull.begin(),b.convexhull.end(),c.convexhull.begin()+1,[](const Point &a,const Point &b){
-        return (a^b)<0;
-    });
-    for(int i=1;i<c.convexhull.size();i++){
-        c.convexhull[i]=c.convexhull[i]+c.convexhull[i-1];
-    }
+    if(res.size()>1) res.pop_back();
+    Polygon c(res.size(),res);
+    c.convexhull=res;
     return c;
+}
+/*
+判断点x与任意简单多边形p（首点不重复）的关系
+0：多边形外部
+1：多边形内部
+2：多边形边界
+顶点需事先按顺时针或逆时针顺序排列
+*/
+int pointInPolygon(const vector<Point> &p,const Point &x){
+    int n=p.size();
+    bool in=false;
+    for(int i=0;i<n;i++){
+        Point a=p[i];
+        Point b=p[(i+1)%n];
+        Segment seg(a,b);
+        if(seg.onsegment(x)) return 2;
+        if((a.y>x.y)!=(b.y>x.y)){
+            double crossX=a.x+(b.x-a.x)*(x.y-a.y)/(b.y-a.y);
+            if(crossX>x.x){
+                in=!in;
+            }
+        }
+    }
+    return in;
+}
+//求简单多边形重心
+//顶点需按顺时针或逆时针排列，首点不重复
+//多边形不能退化为面积为 0
+Point polygonCentroid(const vector<Point> &p){
+    int n=p.size();
+    double area2=0;
+    Point ans(0,0);
+    for(int i=0;i<n;i++){
+        int j=(i+1)%n;
+        double cr=p[i]^p[j];
+        area2+=cr;
+        ans=ans+(p[i]+p[j])*cr;
+    }
+    return ans/(3*area2);
+}
+//返回整数简单多边形内部整点，边界整点
+pair<int,int> Pick(vector<Point> &p){
+    int n=p.size();
+    int area2=0;
+    int boundary=0;
+    for(int i=0;i<n;i++){
+        int j=(i+1)%n;
+        int x1=llround(p[i].x);
+        int y1=llround(p[i].y);
+        int x2=llround(p[j].x);
+        int y2=llround(p[j].y);
+        area2+=x1*y2-x2*y1;
+        boundary+=gcd(abs(x1-x2),abs(y1-y2));
+    }
+    area2=abs(area2);
+    int inside=(area2-boundary+2)/2;
+    return {inside,boundary};
 }
 void solve(){
     int n,m,q;  
@@ -8998,21 +9282,17 @@ void solve(){
     Polygon poly1(n),poly2(m);
     poly1.input();
     poly2.input();
-    for(auto &x:poly2.p){
-        x=Point(0,0)-x;
+    for(auto &p:poly2.p){
+        p.x=-p.x;
+        p.y=-p.y;
     }
     poly1.getConvex();
     poly2.getConvex();
-    Polygon poly=Minkowski(poly1,poly2);
-    poly.inpre();
+    auto poly=Minkowski(poly1,poly2);
     while(q--){
         Point p;
         cin>>p.x>>p.y;
-        if(poly.in(p)){
-            cout<<1<<"\n";
-        }else{
-            cout<<0<<'\n';
-        }
+        cout<<poly.in(p)<<"\n";
     }
 }
 signed main(){
