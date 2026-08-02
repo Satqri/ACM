@@ -2431,22 +2431,22 @@ struct SAM{
     struct edge{
         int len,link,cnt;
         array<int,26> nxt;
-        edge(int len):len(len),link(-1),cnt(0){nxt.fill(0);}
+        edge(int len):len(len),link(0),cnt(0){nxt.fill(0);}
     };
     vector<edge> node;
     int last;
-    SAM():last(0),node(1,0){}
+    SAM():last(1),node(2,0){}
     void add(char c){
         int cur=node.size();
         node.emplace_back(node[last].len+1);
         node[cur].cnt=1;
         int p=last;
-        while(p!=-1&&!node[p].nxt[c-'a']){
+        while(p!=0&&!node[p].nxt[c-'a']){
             node[p].nxt[c-'a']=cur;
             p=node[p].link;
         }
-        if(p==-1){
-            node[cur].link=0;
+        if(p==0){
+            node[cur].link=1;
         }else{
             int q=node[p].nxt[c-'a'];
             if(node[q].len==node[p].len+1){
@@ -2457,7 +2457,7 @@ struct SAM{
                 node[clone].cnt=0;
                 node[clone].len=node[p].len+1;
                 node[q].link=node[cur].link=clone;
-                while(p!=-1&&node[p].nxt[c-'a']==q){
+                while(p!=0&&node[p].nxt[c-'a']==q){
                     node[p].nxt[c-'a']=clone;
                     p=node[p].link;
                 }
@@ -2474,11 +2474,11 @@ void solve(){
     vector<vector<int>> son(sam.node.size());
     vector<ll> dp(sam.node.size());
     ll ans=0;
-    for(int i=1;i<sam.node.size();i++){
+    for(int i=2;i<sam.node.size();i++){
         son[sam.node[i].link].push_back(i);
     }
-    vector<int> id(sam.node.size());
-    iota(id.begin(),id.end(),0);
+    vector<int> id(sam.node.size()-1);
+    iota(id.begin(),id.end(),1);
     sort(id.begin(),id.end(),[&](int &a,int &b){
         return sam.node[a].len>sam.node[b].len;
     });
@@ -9563,7 +9563,7 @@ vector<double> circleCoverageArea(vector<Circle> &circle){
     return res;
 }
 void solve(){
-    
+
 }
 signed main(){
     cin.tie(nullptr)->sync_with_stdio(0);
