@@ -8887,11 +8887,15 @@ struct Segment{
         if(c1*c2<0) return 2;
         return 0;
     }
+    //两线段最短距离
+    inline double distancetosegment(const Segment &e) const{
+        if(intersect(e)) return 0;
+        return min({distancetopoint(e.x),distancetopoint(e.y),e.distancetopoint(x),e.distancetopoint(y)});
+    }
 };
 //要先getConvex求凸包，其他的才能用
 struct Polygon{
     vector<Point> p;
-    vector<Point> convexhull;
     int n;
     Polygon(int n,vector<Point> &v):n(n),p(v){} 
     Polygon(int n):n(n),p(n){}
@@ -8902,14 +8906,13 @@ struct Polygon{
     }
     //凸包逆时针方向排序,首尾点不重复，中间共线点不保留
     void getConvex(){
-        convexhull.clear();
+        vector<Point> convexhull;
         sort(p.begin(),p.end(),Point::sortxupyup);
         p.erase(unique(p.begin(),p.end(),[](const Point &a,const Point &b){
             return a.x==b.x&&a.y==b.y;
         }),p.end());
         n=p.size();
-        if(n<=1){
-            convexhull=p;
+        if(n<=2){
             return;
         }
         vector<int> st1,st2;
@@ -8937,115 +8940,237 @@ struct Polygon{
         st2.pop_back();
         for(auto &id:st1) convexhull.push_back(p[id]);
         for(auto &id:st2) convexhull.push_back(p[id]);
+        swap(convexhull,p);
+        n=p.size();
     }
     double getPerimeter(){
-        if(convexhull.size()<=1) return 0;
+        if(p.size()<=1) return 0;
         double ans=0;
-        for(int i=0;i<convexhull.size();i++){
-            ans+=convexhull[i].dis(convexhull[(i+1)%convexhull.size()]);
+        for(int i=0;i<p.size();i++){
+            ans+=p[i].dis(p[(i+1)%p.size()]);
         }
         return ans;
     }
     double getArea(){
-        if(convexhull.size()<3) return 0;
+        if(p.size()<3) return 0;
         double ans=0;
-        for(int i=0;i<convexhull.size();i++){
-            ans+=convexhull[i]^convexhull[(i+1)%convexhull.size()];
+        for(int i=0;i<p.size();i++){
+            ans+=p[i]^p[(i+1)%p.size()];
         }
-        return ans/2;
+        return fabs(ans)/2;
     }
+    //getconvex!!
     //旋转卡壳求直径，最远点对
     double getLongest(){
-        const int sz=convexhull.size();
+        const int sz=p.size();
         if(sz<=1) return 0;
-        if(sz==2) return convexhull[0].dis(convexhull[1]);
+        if(sz==2) return p[0].dis(p[1]);
         int j=1;
         double ans=0;
         for(int i=0;i<sz;i++){
-            Line line(convexhull[i],convexhull[(i+1)%sz],1);
-            while(line.distancetopoint(convexhull[j])<=line.distancetopoint(convexhull[(j+1)%sz])){
+            Line line(p[i],p[(i+1)%sz],1);
+            while(line.distancetopoint(p[j])<line.distancetopoint(p[(j+1)%sz])){
                 j=(j+1)%sz;
             }
-            ans=max({ans,convexhull[i].dis(convexhull[j]),convexhull[(i+1)%sz].dis(convexhull[j])});
+            ans=max({ans,p[i].dis(p[j]),p[(i+1)%sz].dis(p[j])});
         }
         return ans;
     }
+    //getConvex!!
+    //旋转卡壳求凸包最小宽度
+    //O(n)
+    double minWidth(){
+        const int sz=p.size();
+        if(sz<=2) return 0;
+        int j=1;
+        double ans=1e18;
+        for(int i=0;i<sz;i++){
+            Line line(p[i],p[(i+1)%sz],1);
+            while(line.distancetopoint(p[j])<
+                line.distancetopoint(p[(j+1)%sz])){
+                j=(j+1)%sz;
+            }
+            ans=min(ans,line.distancetopoint(p[j]));
+        }
+        return ans;
+    }
+    //getconvex!!
     //旋转卡壳最小矩形覆盖，返回最小面积，四个顶点（退化就是空数组）
     pair<double,vector<Point>> minRectangleCover(){
-        const int sz=convexhull.size();
+        const int sz=p.size();
         vector<Point> rec;
         if(sz<3) return {0,rec};
         int j=0,l=0,r=0;
         double ans=1e18;
         {
-            Point edge=convexhull[1]-convexhull[0];
-            Line line(convexhull[0],convexhull[1],1);
+            Point edge=p[1]-p[0];
+            Line line(p[0],p[1],1);
             for(int k=1;k<sz;k++){
-                if(line.distancetopoint(convexhull[k])>line.distancetopoint(convexhull[j])){
+                if(line.distancetopoint(p[k])>line.distancetopoint(p[j])){
                     j=k;
                 }
-                if(edge*(convexhull[k]-convexhull[0])<edge*(convexhull[l]-convexhull[0])){
+                if(edge*(p[k]-p[0])<edge*(p[l]-p[0])){
                     l=k;
                 }
-                if(edge*(convexhull[k]-convexhull[0])>edge*(convexhull[r]-convexhull[0])){
+                if(edge*(p[k]-p[0])>edge*(p[r]-p[0])){
                     r=k;
                 }
             }
         }
         for(int i=0;i<sz;i++){
             int ni=(i+1)%sz;
-            Point edge=convexhull[ni]-convexhull[i];
-            Line line(convexhull[i],convexhull[ni],1);
-            while(line.distancetopoint(convexhull[j])<=line.distancetopoint(convexhull[(j+1)%sz])){
+            Point edge=p[ni]-p[i];
+            Line line(p[i],p[ni],1);
+            while(line.distancetopoint(p[j])<line.distancetopoint(p[(j+1)%sz])){
                 j=(j+1)%sz;
             }
-            while(edge*(convexhull[r]-convexhull[i])
-                <=edge*(convexhull[(r+1)%sz]-convexhull[i])){
+            while(edge*(p[r]-p[i])<edge*(p[(r+1)%sz]-p[i])){
                 r=(r+1)%sz;
             }
-            while(edge*(convexhull[l]-convexhull[i])
-                >=edge*(convexhull[(l+1)%sz]-convexhull[i])){
+            while(edge*(p[l]-p[i])>edge*(p[(l+1)%sz]-p[i])){
                 l=(l+1)%sz;
             }
             double len=edge.norm();
-            double height=line.distancetopoint(convexhull[j]);
-            double left=edge*(convexhull[l]-convexhull[i])/len;
-            double right=edge*(convexhull[r]-convexhull[i])/len;
+            double height=line.distancetopoint(p[j]);
+            double left=edge*(p[l]-p[i])/len;
+            double right=edge*(p[r]-p[i])/len;
             double area=height*(right-left);
             if(area<ans){
                 ans=area;
                 Point unit=edge/len;
                 Point normal={-unit.y,unit.x};
-                Point p0=convexhull[i]+unit*left;
-                Point p1=convexhull[i]+unit*right;
+                Point p0=p[i]+unit*left;
+                Point p1=p[i]+unit*right;
                 rec={p0,p1,p1+normal*height,p0+normal*height};
             }
         }
         return {ans,rec};
     }
+    /*
+    判断点x与任意简单多边形p（首点不重复）的关系
+    0：多边形外部
+    1：多边形内部
+    2：多边形边界
+    顶点需事先按顺时针或逆时针顺序排列
+    on
+    */
+    int pointInPolygon(const Point &x){
+        int n=p.size();
+        bool in=false;
+        for(int i=0;i<n;i++){
+            Point a=p[i];
+            Point b=p[(i+1)%n];
+            Segment seg(a,b);
+            if(seg.onsegment(x)) return 2;
+            if((a.y>x.y)!=(b.y>x.y)){
+                double crossX=a.x+(b.x-a.x)*(x.y-a.y)/(b.y-a.y);
+                if(crossX>x.x){
+                    in=!in;
+                }
+            }
+        }
+        return in;
+    }
+    //getconvex！！
     //判断点是否在凸包内部或边界上，logn
-    bool in(Point x){
-        const int sz=convexhull.size();
-        if(sz==0) return false;
+    //0：外部
+    //1：内部
+    //2：边界
+    int in(Point x){
+        const int sz=p.size();
+        if(sz==0) return 0;
         if(sz==1){
-            return x.x==convexhull[0].x&&x.y==convexhull[0].y;
+            return (x.x==p[0].x&&x.y==p[0].y)?2:0;
         }
         if(sz==2){
-            return ((convexhull[1]-convexhull[0])^(x-convexhull[0]))==0&&(x-convexhull[0])*(x-convexhull[1])<=0;
+            if(((p[1]-p[0])^(x-p[0]))==0 &&
+            (x-p[0])*(x-p[1])<=0){
+                return 2;
+            }
+            return 0;
         }
-        Point base=x-convexhull[0];
-        if(((convexhull[1]-convexhull[0])^base)<0) return false;
-        if(((convexhull[sz-1]-convexhull[0])^base)>0) return false;
+        Point base=x-p[0];
+        double c1=(p[1]-p[0])^base;
+        double c2=(p[sz-1]-p[0])^base;
+        if(c1<0 || c2>0) return 0;
+        if(c1==0){
+            return (x-p[0])*(x-p[1])<=0 ? 2:0;
+        }
+        if(c2==0){
+            return (x-p[0])*(x-p[sz-1])<=0 ? 2:0;
+        }
         int l=1,r=sz-1;
         while(r-l>1){
             int mid=(l+r)>>1;
-            if(((convexhull[mid]-convexhull[0])^base)>=0){
+            if(((p[mid]-p[0])^base)>=0){
                 l=mid;
             }else{
                 r=mid;
             }
         }
-        return ((convexhull[l+1]-convexhull[l])^(x-convexhull[l]))>=0;
+        double cr=(p[l+1]-p[l])^(x-p[l]);
+
+        if(cr<0) return 0;
+        if(cr==0) return 2;
+        return 1;
+    }
+    //求简单多边形重心
+    //顶点需按顺时针或逆时针排列，首点不重复
+    //多边形不能退化为面积为 0
+    Point polygonCentroid(){
+        int n=p.size();
+        double area2=0;
+        Point ans(0,0);
+        for(int i=0;i<n;i++){
+            int j=(i+1)%n;
+            double cr=p[i]^p[j];
+            area2+=cr;
+            ans=ans+(p[i]+p[j])*cr;
+        }
+        return ans/(3*area2);
+    }
+    //返回(整数)简单多边形内部整点，边界整点
+    pair<int,int> Pick(){
+        int n=p.size();
+        int area2=0;
+        int boundary=0;
+        for(int i=0;i<n;i++){
+            int j=(i+1)%n;
+            int x1=llround(p[i].x);
+            int y1=llround(p[i].y);
+            int x2=llround(p[j].x);
+            int y2=llround(p[j].y);
+            area2+=x1*y2-x2*y1;
+            boundary+=__gcd(abs(x1-x2),abs(y1-y2));
+        }
+        area2=abs(area2);
+        int inside=(area2-boundary+2)/2;
+        return {inside,boundary};
+    }
+    //用有向直线e裁剪当前多边形
+    //保留e左侧和直线上的部分
+    //. . .保留
+    //----->
+    //主要用于凸多边形，结果仍为凸多边形
+    //on
+    Polygon cut(const Line &e) const{
+        vector<Point> res;
+        int sz=p.size();
+        if(sz==0) return Polygon(0);
+        for(int i=0;i<sz;i++){
+            Point a=p[i];
+            Point b=p[(i+1)%sz];
+            double ca=e.y^(a-e.x);
+            double cb=e.y^(b-e.x);
+            if(ca>=0){
+                res.push_back(a);
+            }
+            if((ca<0&&cb>0)||(ca>0&&cb<0)){
+                Line line(a,b,1);
+                res.push_back(e.intersection(line).second);
+            }
+        }
+        return Polygon(res.size(),res);
     }
 };
 struct Circle{
@@ -9059,6 +9184,11 @@ struct Circle{
         Point ac=c-a;
         double d=2*(ab^ac);
         o=a+Point{(ab.norm2()*ac.y-ac.norm2()*ab.y)/d,(ab.x*ac.norm2()-ac.x*ab.norm2())/d};
+        r=o.dis(a);
+    }
+    //由两点构造以ab为直径的圆
+    Circle(const Point &a,const Point &b){
+        o=(a+b)/2;
         r=o.dis(a);
     }
     //判断点p与圆的位置关系：
@@ -9175,7 +9305,7 @@ struct Circle{
     }
 };
 Polygon Minkowski(Polygon a,Polygon b){
-    if(a.convexhull.empty()||b.convexhull.empty()){
+    if(a.p.empty()||b.p.empty()){
         return Polygon(0);
     }
     auto init=[](vector<Point> &h){
@@ -9185,8 +9315,8 @@ Polygon Minkowski(Polygon a,Polygon b){
         })-h.begin();
         rotate(h.begin(),h.begin()+k,h.end());
     };
-    init(a.convexhull);
-    init(b.convexhull);
+    init(a.p);
+    init(b.p);
     auto getEdge=[](const vector<Point> &h){
         vector<Point> edge;
         int sz=h.size();
@@ -9196,9 +9326,9 @@ Polygon Minkowski(Polygon a,Polygon b){
         }
         return edge;
     };
-    vector<Point> ea=getEdge(a.convexhull);
-    vector<Point> eb=getEdge(b.convexhull);
-    vector<Point> res={a.convexhull[0]+b.convexhull[0]};
+    vector<Point> ea=getEdge(a.p);
+    vector<Point> eb=getEdge(b.p);
+    vector<Point> res={a.p[0]+b.p[0]};
     int i=0,j=0;
     while(i<ea.size()||j<eb.size()){
         Point edge;
@@ -9216,84 +9346,224 @@ Polygon Minkowski(Polygon a,Polygon b){
     }
     if(res.size()>1) res.pop_back();
     Polygon c(res.size(),res);
-    c.convexhull=res;
     return c;
 }
 /*
-判断点x与任意简单多边形p（首点不重复）的关系
-0：多边形外部
-1：多边形内部
-2：多边形边界
-顶点需事先按顺时针或逆时针顺序排列
+半平面交
+每条有向直线都保留左侧及直线本身
+要求最终交集是有界区域
+返回结果逆时针排列，首尾不重复
+空集或无界区域返回空Polygon
+nlogn
 */
-int pointInPolygon(const vector<Point> &p,const Point &x){
-    int n=p.size();
-    bool in=false;
-    for(int i=0;i<n;i++){
-        Point a=p[i];
-        Point b=p[(i+1)%n];
-        Segment seg(a,b);
-        if(seg.onsegment(x)) return 2;
-        if((a.y>x.y)!=(b.y>x.y)){
-            double crossX=a.x+(b.x-a.x)*(x.y-a.y)/(b.y-a.y);
-            if(crossX>x.x){
-                in=!in;
+Polygon halfPlaneIntersection(vector<Line> lines){
+    auto outside=[](const Line &e,const Point &p){
+        return (e.y^(p-e.x))<0;
+    };
+    sort(lines.begin(),lines.end(),[](const Line &a,const Line &b){
+        return Point::sortPointAngle(a.y,b.y);
+    });
+    vector<Line> h;
+    for(auto &e:lines){
+        if(h.empty()||(h.back().y^e.y)!=0){
+            h.push_back(e);
+        }else if((h.back().y^(e.x-h.back().x))>0){
+            h.back()=e;
+        }
+    }
+    deque<Line> q;
+    deque<Point> intersectionPoint;
+    for(auto &e:h){
+        while(!intersectionPoint.empty()&&outside(e,intersectionPoint.back())){
+            intersectionPoint.pop_back();
+            q.pop_back();
+        }
+        while(!intersectionPoint.empty()&&outside(e,intersectionPoint.front())){
+            intersectionPoint.pop_front();
+            q.pop_front();
+        }
+        if(!q.empty()){
+            auto now=q.back().intersection(e);
+            if(now.first!=1) return Polygon(0);
+            intersectionPoint.push_back(now.second);
+        }
+        q.push_back(e);
+    }
+    while(!intersectionPoint.empty()&&outside(q.front(),intersectionPoint.back())){
+        intersectionPoint.pop_back();
+        q.pop_back();
+    }
+    while(!intersectionPoint.empty()&&outside(q.back(),intersectionPoint.front())){
+        intersectionPoint.pop_front();
+        q.pop_front();
+    }
+    if(q.size()<3) return Polygon(0);
+    auto last=q.back().intersection(q.front());
+    if(last.first!=1) return Polygon(0);
+    vector<Point> res(intersectionPoint.begin(),intersectionPoint.end());
+    res.push_back(last.second);
+    return Polygon(res.size(),res);
+}
+/*
+最小包围圆
+返回覆盖所有点的最小圆
+随机增量，期望O(n)
+空点集返回圆心(0,0)、半径0
+*/
+Circle minimumEnclosingCircle(vector<Point> p){
+    if(p.empty()) return Circle(Point(0,0),0);
+    mt19937_64 rng(time(0));
+    shuffle(p.begin(),p.end(),rng);
+    //三点确定最小圆
+    //不共线时为外接圆，共线时取最远两点为直径
+    auto circleFromThree=[](const Point &a,const Point &b,const Point &c){
+        if(((b-a)^(c-a))!=0){
+            return Circle(a,b,c);
+        }
+        double ab=(a-b).norm2();
+        double ac=(a-c).norm2();
+        double bc=(b-c).norm2();
+        if(ab>=ac&&ab>=bc) return Circle(a,b);
+        if(ac>=ab&&ac>=bc) return Circle(a,c);
+        return Circle(b,c);
+    };
+    Circle ans(p[0],0);
+    for(int i=1;i<p.size();i++){
+        if(ans.relation(p[i])!=0) continue;
+        ans=Circle(p[i],0);
+        for(int j=0;j<i;j++){
+            if(ans.relation(p[j])!=0) continue;
+            ans=Circle(p[i],p[j]);
+            for(int k=0;k<j;k++){
+                if(ans.relation(p[k])!=0) continue;
+                ans=circleFromThree(p[i],p[j],p[k]);
             }
         }
     }
-    return in;
+    return ans;
 }
-//求简单多边形重心
-//顶点需按顺时针或逆时针排列，首点不重复
-//多边形不能退化为面积为 0
-Point polygonCentroid(const vector<Point> &p){
-    int n=p.size();
-    double area2=0;
-    Point ans(0,0);
+/*
+求圆c与简单多边形poly的相交面积
+多边形顶点需按顺时针或逆时针排列，首点不重复
+O(n)
+*/
+double circlePolygonIntersectionArea(const Circle &c,const Polygon &poly){
+    auto calc=[&](Point a,Point b){
+        a=a-c.o;
+        b=b-c.o;
+        Point d=b-a;
+        double A=d*d;
+        if(A==0) return 0.0;
+        double B=2*(a*d);
+        double C=a*a-c.r*c.r;
+        double delta=B*B-4*A*C;
+        vector<double> t={0,1};
+        if(delta>0){
+            double sq=sqrtl(delta);
+            double t1=(-B-sq)/(2*A);
+            double t2=(-B+sq)/(2*A);
+            if(t1>0&&t1<1) t.push_back(t1);
+            if(t2>0&&t2<1) t.push_back(t2);
+        }
+        sort(t.begin(),t.end());
+        double ans=0;
+        for(int i=0;i+1<t.size();i++){
+            double l=t[i];
+            double r=t[i+1];
+            Point u=a+d*l;
+            Point v=a+d*r;
+            Point mid=a+d*((l+r)/2);
+            if(mid.norm2()<=c.r*c.r){
+                ans+=(u^v)/2;
+            }else{
+                double angle=atan2l(u^v,u*v);
+                ans+=c.r*c.r*angle/2;
+            }
+        }
+        return ans;
+    };
+    double ans=0;
+    int n=poly.p.size();
     for(int i=0;i<n;i++){
-        int j=(i+1)%n;
-        double cr=p[i]^p[j];
-        area2+=cr;
-        ans=ans+(p[i]+p[j])*cr;
+        ans+=calc(poly.p[i],poly.p[(i+1)%n]);
     }
-    return ans/(3*area2);
+    return fabs(ans);
 }
-//返回整数简单多边形内部整点，边界整点
-pair<int,int> Pick(vector<Point> &p){
-    int n=p.size();
-    int area2=0;
-    int boundary=0;
+/*
+多个圆覆盖次数面积
+res[k]=至少被k个圆覆盖面积
+res[1]就是圆面积并
+O(n^2logn)
+*/
+vector<double> circleCoverageArea(vector<Circle> &circle){
+    const double PI=acosl(-1);
+    int n=circle.size();
+    vector<double> res(n+2);
+    auto normAngle=[&](double x){
+        while(x<0) x+=2*PI;
+        while(x>=2*PI) x-=2*PI;
+        return x;
+    };
+    auto arcArea=[](const Circle &c,double l,double r){
+        Point a=c.o+Point(cosl(l),sinl(l))*c.r;
+        Point b=c.o+Point(cosl(r),sinl(r))*c.r;
+        return ((c.o^(b-a))+c.r*c.r*(r-l))/2;
+    };
     for(int i=0;i<n;i++){
-        int j=(i+1)%n;
-        int x1=llround(p[i].x);
-        int y1=llround(p[i].y);
-        int x2=llround(p[j].x);
-        int y2=llround(p[j].y);
-        area2+=x1*y2-x2*y1;
-        boundary+=gcd(abs(x1-x2),abs(y1-y2));
+        Circle &a=circle[i];
+        vector<pair<double,int>> event;
+        int cnt=1;
+        for(int j=0;j<n;j++){
+            if(i==j) continue;
+            const Circle &b=circle[j];
+            double d=a.o.dis(b.o);
+            if(d==0&&a.r==b.r){
+                if(j<i) continue;
+                cnt++;
+                continue;
+            }
+            if(d+a.r<=b.r){
+                cnt++;
+                continue;
+            }
+            if(d+b.r<=a.r||d>=a.r+b.r)
+                continue;
+            double base=atan2l(b.o.y-a.o.y,b.o.x-a.o.x);
+            double cosa=(a.r*a.r+d*d-b.r*b.r)/(2*a.r*d);
+            cosa=max(-1.0,min(1.0,cosa));
+            double delta=acosl(cosa);
+            double l=normAngle(base-delta);
+            double r=normAngle(base+delta);
+            if(l<=r){
+                event.push_back({l,1});
+                event.push_back({r,-1});
+            }else{
+                cnt++;
+                event.push_back({r,-1});
+                event.push_back({l,1});
+            }
+        }
+        sort(event.begin(),event.end());
+        double last=0;
+        for(int j=0;j<event.size();){
+            double now=event[j].first;
+            if(last<now)
+                res[cnt]+=arcArea(a,last,now);
+            int k=j;
+            while(k<event.size()&&event[k].first==now){
+                cnt+=event[k].second;
+                k++;
+            }
+            last=now;
+            j=k;
+        }
+        if(last<2*PI) res[cnt]+=arcArea(a,last,2*PI);
     }
-    area2=abs(area2);
-    int inside=(area2-boundary+2)/2;
-    return {inside,boundary};
+    for(int i=1;i<=n;i++) res[i]=fabs(res[i]);
+    return res;
 }
 void solve(){
-    int n,m,q;  
-    cin>>n>>m>>q;
-    Polygon poly1(n),poly2(m);
-    poly1.input();
-    poly2.input();
-    for(auto &p:poly2.p){
-        p.x=-p.x;
-        p.y=-p.y;
-    }
-    poly1.getConvex();
-    poly2.getConvex();
-    auto poly=Minkowski(poly1,poly2);
-    while(q--){
-        Point p;
-        cin>>p.x>>p.y;
-        cout<<poly.in(p)<<"\n";
-    }
+    
 }
 signed main(){
     cin.tie(nullptr)->sync_with_stdio(0);
