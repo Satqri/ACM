@@ -11200,3 +11200,66 @@ int operator%(int a, Barrett mod) {
     return w;
 }
 ```
+
+## ModInt
+
+```cpp
+template<int MOD>
+struct ModInt{
+    int v;
+    ModInt(int x=0){
+        v=(x%MOD+MOD)%MOD;
+    }
+    ModInt& operator+=(const ModInt &o){
+        v+=o.v;
+        if(v>=MOD) v-=MOD;
+        return *this;
+    }
+    ModInt& operator-=(const ModInt &o){
+        v-=o.v;
+        if(v<0) v+=MOD;
+        return *this;
+    }
+    ModInt& operator*=(const ModInt &o){
+        v=v*o.v%MOD;
+        return *this;
+    }
+    ModInt qpow(int k){
+        ModInt res=1,base=*this;
+        while(k){
+            if(k&1) res*=base;
+            base*=base;
+            k>>=1;
+        }
+        return res;
+    }
+    ModInt inv() const{
+        return qpow(MOD-2);
+    }
+    ModInt& operator/=(const ModInt &o){
+        return *this*=o.inv();
+    }
+    friend ModInt operator+(ModInt a,const ModInt &b){
+        return a+=b;
+    }
+    friend ModInt operator-(ModInt a,const ModInt &b){
+        return a-=b;
+    }
+    friend ModInt operator*(ModInt a,const ModInt &b){
+        return a*=b;
+    }
+    friend ModInt operator/(ModInt a,const ModInt &b){
+        return a/=b;
+    }
+    friend ostream& operator<<(ostream &os,const ModInt &x){
+        return os<<x.v;
+    }
+    friend istream& operator>>(istream &is,ModInt &x){
+        int v;
+        is>>v;
+        x=ModInt(v);
+        return is;
+    }
+};
+using mint=ModInt<998244353>;
+```
