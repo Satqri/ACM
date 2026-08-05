@@ -11239,6 +11239,12 @@ struct ModInt{
     ModInt& operator/=(const ModInt &o){
         return *this*=o.inv();
     }
+    bool operator==(ModInt a){
+        return a.v==v;
+    }
+    bool operator!=(ModInt a){
+        return !(a.v==v);
+    }
     friend ModInt operator+(ModInt a,const ModInt &b){
         return a+=b;
     }
