@@ -5850,6 +5850,14 @@ $$
    $$
    \varphi = \operatorname{id} * \mu \quad \Longleftrightarrow \quad \varphi(n) = \sum_{d \mid n} d \cdot \mu\left( \frac{n}{d} \right).
    $$
+## BurnSide 引理
+
+对每种置换操作，统计操作前后不变的排列个数；把它们求和，再除以置换操作的总数，得到这些置换意义下本质不同的排列个数。
+注意置换必须形成置换群。
+## Polya 引理
+
+对每种置换，若有 $c$ 个置换环、每个位置有 $k$ 种取值，那么该置换下不变方案数就是 $k^c$；把所有置换对应的 $k^c$ 求和，再除以置换总数，就是这些置换意义下本质不同的排列个数。
+注意置换必须形成置换群。
 
 # 图论
 
