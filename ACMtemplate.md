@@ -10834,6 +10834,8 @@ signed main(){
 ## 快读快写
 
 ```cpp
+char buf[1<<21],*p1=buf,*p2=buf;
+#define getchar()  (p1==p2 && (p2=(p1=buf)+fread(buf,1,1<<21,stdin),p1==p2)?EOF:*p1++)
 void get(int &x){
     x=0;
     char ch=getchar();
