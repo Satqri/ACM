@@ -2502,6 +2502,55 @@ signed main(){
 }
 ```
 
+## PAM
+```c++
+struct PAM{
+    struct edge{
+        int len,fail,cnt,sum;
+        array<int, 26> nxt;
+        edge(int len=0):len(len),fail(0),cnt(0),sum(0) {
+            nxt.fill(0);
+        }
+    };
+    vector<edge> node;
+    string s;
+    int last;
+    PAM(){
+        node.emplace_back();
+        node.emplace_back(-1);//1:奇根
+        node.emplace_back(0);//2:偶根
+        node[1].fail=1;
+        node[2].fail=1;
+        last=2;
+        s="#";
+    }
+    int getfail(int x,int pos){
+        while(s[pos-node[x].len-1]!=s[pos]) {
+            x=node[x].fail;
+        }
+        return x;
+    }
+    void add(char ch){
+        s+=ch;
+        int pos=s.size()-1;
+        int c=ch-'a';
+        int cur=getfail(last,pos);
+        if (!node[cur].nxt[c]){
+            int now=node.size();
+            node.emplace_back(node[cur].len+2);
+            if (node[now].len==1) {
+                node[now].fail=2;
+            }else{
+                int x = getfail(node[cur].fail,pos);
+                node[now].fail=node[x].nxt[c];
+            }
+            node[cur].nxt[c]=now;
+        }
+        last=node[cur].nxt[c];
+        node[last].cnt++;
+    }
+};
+```
 # 数学
 
 ## 高精度
@@ -7271,6 +7320,22 @@ a1和b2有矛盾，则建有向边a1->b1,b2->a2，tarjan缩点判断是否有一
 
 也可以爆搜
 
+* A or B
+	$\neg A\to B, \neg B\to A$
+* A xor B
+	$\begin{aligned} \neg A&\to B,\\ \neg B&\to A,\\ A&\to\neg B,\\ B&\to\neg A. \end{aligned}$
+* !(A and B)
+	$A\to\neg B, B\to\neg A.$
+* A xor B=0
+	$\begin{aligned} A&\to B,\\ B&\to A,\\ \neg A&\to\neg B,\\ \neg B&\to\neg A. \end{aligned}$
+* A->B
+	$A\to B,\neg B\to\neg A.$
+* 强制选A
+	$\neg A\to A.$
+* 强制不选A
+	$A\to\neg A.$
+* A and B
+	强制选A，强制选B
 ```cpp
 #include<bits/stdc++.h>
 using namespace std;
