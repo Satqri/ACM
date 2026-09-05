@@ -8710,6 +8710,54 @@ prufer转无根树:
 4. n个节点度依次为$d_1,d_2,...,d_n$的无根树共有$\frac{(n-2)!}{\prod_{i=1}^n(d_i-1)!}$个
 5. n个点的有标号有根树共有 $n^{(n-2)}*n=n^{n-1}$ 个
 
+## 全局最小割
+
+```cpp
+class Graph {
+    vector<vector<int>> adj; // 邻接矩阵
+    int n;
+public:
+    Graph(int n) : n(n), adj(n, vector<int>(n, 0)) {}
+
+    void addEdge(int u, int v, int w) {
+        adj[u][v] = adj[v][u] = w;
+    }
+
+    int stoerWagner() {
+        int res = INT_MAX;
+        for (int i = 0; i < n - 1; ++i) {
+            vector<int> ma(n, 0);
+            ma[0] = INT_MAX;  // 选择总是从 0 开始
+
+            int s = -1, t = -1;
+            for (int j = 0; j < n - i - 1; ++j) {
+                int a = max_element(ma.begin(), ma.end()) - ma.begin();
+
+                if (ma[a] == 0) return 0; // Graph is disconnected
+                ma[a] = -1;
+
+                if (j == n - i - 2) s = a;  // The second last node is s
+                for (int k = 0; k < n; ++k) {
+                    if (ma[k] >= 0) ma[k] += adj[a][k];
+                }
+            }
+            t = max_element(ma.begin(), ma.end()) - ma.begin();
+
+            res = min(res, ma[t]);
+
+            // Merge nodes s and t
+            for (int k = 0; k < n; ++k) {
+                if (k != s && k != t) {
+                    adj[s][k] += adj[t][k];
+                    adj[k][s] = adj[s][k];
+                    adj[t][k] = adj[k][t] = 0;
+                }
+            }
+        } return res;
+    }
+};
+```
+
 # 计算几何
 
 ## 二维几何
