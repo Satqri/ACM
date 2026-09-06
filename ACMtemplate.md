@@ -8728,11 +8728,9 @@ public:
         for (int i = 0; i < n - 1; ++i) {
             vector<int> ma(n, 0);
             ma[0] = INT_MAX;  // 选择总是从 0 开始
-
             int s = -1, t = -1;
             for (int j = 0; j < n - i - 1; ++j) {
                 int a = max_element(ma.begin(), ma.end()) - ma.begin();
-
                 if (ma[a] == 0) return 0; // Graph is disconnected
                 ma[a] = -1;
 
