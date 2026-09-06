@@ -8718,11 +8718,9 @@ class Graph {
     int n;
 public:
     Graph(int n) : n(n), adj(n, vector<int>(n, 0)) {}
-
     void addEdge(int u, int v, int w) {
         adj[u][v] = adj[v][u] = w;
     }
-
     int stoerWagner() {
         int res = INT_MAX;
         for (int i = 0; i < n - 1; ++i) {
@@ -8733,16 +8731,13 @@ public:
                 int a = max_element(ma.begin(), ma.end()) - ma.begin();
                 if (ma[a] == 0) return 0; // Graph is disconnected
                 ma[a] = -1;
-
                 if (j == n - i - 2) s = a;  // The second last node is s
                 for (int k = 0; k < n; ++k) {
                     if (ma[k] >= 0) ma[k] += adj[a][k];
                 }
             }
             t = max_element(ma.begin(), ma.end()) - ma.begin();
-
             res = min(res, ma[t]);
-
             // Merge nodes s and t
             for (int k = 0; k < n; ++k) {
                 if (k != s && k != t) {
